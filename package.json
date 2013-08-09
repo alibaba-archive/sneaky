@@ -1,0 +1,33 @@
+{
+  "name": "Sneaky",
+  "version": "0.0.0",
+  "description": "Auto deployment with cake task, and be enjoy with git",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:teambition/Sneaker"
+  },
+  "keywords": [
+    "deploy",
+    "cake",
+    "coffee",
+    "git",
+    "ops-tool"
+  ],
+  "author": "teambition",
+  "license": "MIT",
+  "devDependencies": {
+    "cake-dog": "~0.1.2"
+  },
+  "dependencies": {
+    "colors": "~0.6.1",
+    "async": "~0.2.9",
+    "read": "~1.0.5",
+    "moment": "~2.1.0",
+    "mkdirp": "~0.3.5",
+    "js-yaml": "~2.1.0"
+  }
+}
