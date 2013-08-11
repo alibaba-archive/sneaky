@@ -21,14 +21,7 @@ deploy = (project, callback) ->
     ), ((next) ->
     before(project, next)
     ), ((next) ->
-    servers = getServers(project)
-    async.eachSeries servers, ((server, _next) ->
-      rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force " +
-        "#{localDir}/#{project.name} #{server[0]}@#{server[1]}:#{project.destination}"
-      runCmd rsyncCmd, (err, data) ->  # begin rsync
-        _next(err)
-      ), (err, result) ->
-      next(err)
+    rsync(project, next)
     )], (err, result) ->
       if err?
         logger.err(err.toString())
@@ -50,11 +43,16 @@ archive = (project, callback = ->) ->
 # use rsync to deploy local source code to remote servers
 rsync = (project, callback = ->) ->
   servers = getServers(project)
-  async.eachSeries servers, ((server, next)) ->
+  excludes = []
+  if typeof project.excludes == 'object' and project.excludes.length > 0
+    excludes = project.excludes.map (item) ->
+      return "--exclude=#{item}"
+  async.eachSeries servers, ((server, next) ->
     rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force " +
-      "#{localDir}/#{project.name} #{server[0]}@#{server[1]}:#{project.destination}"
+      excludes.join(' ') +
+      " #{localDir}/#{project.name} #{server[0]}@#{server[1]}:#{project.destination}"
     runCmd rsyncCmd, (err, data) ->
-      nex(err)
+      next(err)
     ), (err, result) ->
     callback(err)
 # finish define rsync
@@ -76,18 +74,16 @@ after = (project, callback = -> ) ->
 # get remote user and server
 getServers = (project) ->
   servers = []
-  if typeof project.server == 'string'
-    [server, user] = project.server.split('|')
+  if typeof project.servers == 'string'
+    [server, user] = project.servers.split('|')
     user = user or configs.user or 'root'
-    server = server or configs.server
     servers.push([user, server])
-  else if typeof project.server == 'object'
-    for i, item of project.server
+  else if typeof project.servers == 'object'
+    for i, item of project.servers
       [server, user] = item.split('|')
       user = user or configs.user or 'root'
-      server = server or configs.server
       servers.push([user, server])
-  else if configs.server?
+  else if configs.servers?
     return getServers(configs)
   return servers
 # finish define getServers
