@@ -22,6 +22,8 @@ deploy = (project, callback) ->
     before(project, next)
     ), ((next) ->
     rsync(project, next)
+    ), ((next) ->
+    after(project, next)
     )], (err, result) ->
       if err?
         logger.err(err.toString())
@@ -48,9 +50,10 @@ rsync = (project, callback = ->) ->
     excludes = project.excludes.map (item) ->
       return "--exclude=#{item}"
   async.eachSeries servers, ((server, next) ->
-    rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force " +
+    rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
+      " -e \"ssh -p #{server[2]}\" " +
       excludes.join(' ') +
-      " #{localDir}/#{project.name} #{server[0]}@#{server[1]}:#{project.destination}"
+      " #{localDir}/#{project.name} #{server[1]}@#{server[0]}:#{project.destination}"
     runCmd rsyncCmd, (err, data) ->
       next(err)
     ), (err, result) ->
@@ -68,21 +71,32 @@ before = (project, callback = ->) ->
 # finish define before hooks
 
 # hooks after rsync deploy
-after = (project, callback = -> ) ->
+after = (project, callback = ->) ->
+  servers = getServers(project)
+  if project.after? and typeof project.after == 'string'
+    logger.log('after-hook:')
+    async.eachSeries servers, ((server, next) ->
+      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
+      runCmd sshCmd, (err, data) ->
+        next(err)
+      ), (err, result) ->
+      callback(err)
 # finish define after hooks
 
 # get remote user and server
 getServers = (project) ->
   servers = []
   if typeof project.servers == 'string'
-    [server, user] = project.servers.split('|')
-    user = user or configs.user or 'root'
-    servers.push([user, server])
+    [server, user, port] = project.servers.split('|')
+    user = user or configs.user or 'root'  # ssh user name
+    port = port or '22'  # ssh port
+    servers.push([server, user, port])
   else if typeof project.servers == 'object'
     for i, item of project.servers
-      [server, user] = item.split('|')
-      user = user or configs.user or 'root'
-      servers.push([user, server])
+      [server, user, port] = item.split('|')
+      user = user or configs.user or 'root'  # ssh user name
+      port = port or '22'  # ssh port
+      servers.push([server, user, port])
   else if configs.servers?
     return getServers(configs)
   return servers
