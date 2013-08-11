@@ -5,81 +5,118 @@ jsYaml = require('js-yaml')
 Logger = require('./Logger')
 exec = require('child_process').exec
 
-localDir = "#{process.env.HOME}/.sneaky"
+localDir = "#{process.env.HOME}/.sneaky"  # local home directory
+configs = {}  # configs from ~/.sneakyrc
+logger = null  # pre define logger
 
 quit = ->
   setTimeout(process.exit, 200)
 
+# deploy function for each project
+deploy = (project, callback) ->
+  logger.log('-----------------------------------------------------------------')
+  logger.log("start deploy #{project.name}")
+  async.waterfall [((next) ->  # begin archive
+    archive(project, next)
+    ), ((next) ->
+    before(project, next)
+    ), ((next) ->
+    rsync(project, next)
+    ), ((next) ->
+    after(project, next)
+    )], (err, result) ->
+      if err?
+        logger.err(err.toString())
+      logger.log("finish deploy #{project.name}")
+      logger.log('-----------------------------------------------------------------')
+      callback(err, result)
+# finish define deploy
+
+# archive from git and migrate to temporary directory
+archive = (project, callback = ->) ->
+  prefix = project.prefix or project.name + '/'
+  gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
+    "--remote=#{project.source} --format=tar | tar -xf - -C #{localDir}"
+  process.chdir("#{localDir}/#{prefix}")
+  runCmd gitCmd, (err, data) ->
+    callback(err)
+# finish define archive
+
+# use rsync to deploy local source code to remote servers
+rsync = (project, callback = ->) ->
+  servers = getServers(project)
+  excludes = []
+  if typeof project.excludes == 'object' and project.excludes.length > 0
+    excludes = project.excludes.map (item) ->
+      return "--exclude=#{item}"
+  async.eachSeries servers, ((server, next) ->
+    rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
+      " -e \"ssh -p #{server[2]}\" " +
+      excludes.join(' ') +
+      " #{localDir}/#{project.name} #{server[1]}@#{server[0]}:#{project.destination}"
+    runCmd rsyncCmd, (err, data) ->
+      next(err)
+    ), (err, result) ->
+    callback(err)
+# finish define rsync
+
+# hooks before rsync deploy
+before = (project, callback = ->) ->
+  if project.before? and typeof project.before == 'string'
+    logger.log('before-hook:')
+    runCmd project.before, (err, data) ->
+      callback(err)
+  else
+    callback(null)
+# finish define before hooks
+
+# hooks after rsync deploy
+after = (project, callback = ->) ->
+  servers = getServers(project)
+  if project.after? and typeof project.after == 'string'
+    logger.log('after-hook:')
+    async.eachSeries servers, ((server, next) ->
+      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
+      runCmd sshCmd, (err, data) ->
+        next(err)
+      ), (err, result) ->
+      callback(err)
+# finish define after hooks
+
+# get remote user and server
+getServers = (project) ->
+  servers = []
+  if typeof project.servers == 'string'
+    [server, user, port] = project.servers.split('|')
+    user = user or configs.user or 'root'  # ssh user name
+    port = port or '22'  # ssh port
+    servers.push([server, user, port])
+  else if typeof project.servers == 'object'
+    for i, item of project.servers
+      [server, user, port] = item.split('|')
+      user = user or configs.user or 'root'  # ssh user name
+      port = port or '22'  # ssh port
+      servers.push([server, user, port])
+  else if configs.servers?
+    return getServers(configs)
+  return servers
+# finish define getServers
+
+# define run command
+runCmd = (cmd, callback = ->) ->
+  logger.log(cmd)
+  exec cmd, (err, data) ->
+    logger.log(data.toString())
+    callback(err, data)
+# finish define run command
+
+# auto generate tag from git repos
+autoTag: ->
+# finish autoTag
+
 main = (options = {}, callback = ->) ->
 
-  # define deploy function for each project
-  deploy = (project, callback) ->
-    logger.log("start deploy #{project.name}")
-    async.waterfall [((next) ->  # begin archive
-      prefix = project.prefix or project.name + '/'
-      gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
-        "--remote=#{project.source} --format=tar | tar -xf - -C #{localDir}"
-      process.chdir("#{localDir}/#{prefix}")
-      runCmd gitCmd, (err, data) ->
-        next(err)
-      ), ((next) ->
-      before(project, next)
-      ), ((next) ->
-      servers = ssh(project)
-      async.eachSeries servers, ((server, _next) ->
-        rsyncCmd = project.rsyncCmd or "rsync -a --delete-after --ignore-errors --force " +
-          "#{localDir}/#{project.name} #{server[0]}@#{server[1]}:#{project.destination}"
-        runCmd rsyncCmd, (err, data) ->  # begin rsync
-          _next(err)
-        ), (err, result) ->
-        next(err)
-      )], (err, result) ->
-        if err?
-          logger.err(err.toString())
-        logger.log("finish deploy #{project.name}")
-        callback(err, result)
-  # define deploy end
-
-  archive = (project) ->
-
-  before = (project, callback = ->) ->
-    if project.before? and typeof project.before == 'string'
-      runCmd project.before, (err, data) ->
-        callback(err)
-    else
-      callback(null)
-
-  # define ssh user and server
-  ssh = (project) ->
-    servers = []
-    if typeof project.server == 'string'
-      [server, user] = project.server.split('|')
-      user = user or configs.user or 'root'
-      server = server or configs.server
-      servers.push([user, server])
-    else
-      for i, item of project.server
-        [server, user] = item.split('|')
-        user = user or configs.user or 'root'
-        server = server or configs.server
-        servers.push([user, server])
-    return servers
-  # define ssh finish
-
-
-  # define run command
-  runCmd = (cmd, callback = ->) ->
-    logger.log(cmd)
-    exec cmd, (err, data) ->
-      logger.log(data.toString())
-      callback(err, data)
-
-  # define run command end
-
-  # define autoTag
-  autoTag: ->
-  # define autoTag finish
-
+  # start from here
   logger = new Logger()
   logger.setPrefix({
     warn: 'WARN: '
@@ -121,7 +158,5 @@ main = (options = {}, callback = ->) ->
     logger.log('=================================================================\n')
     callback(err, result)
   # deploy finish
-
-
 
 module.exports = main
