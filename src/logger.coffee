@@ -5,10 +5,10 @@ Moment = require('moment')
 
 class Logger
 
-  constructor: ->
+  constructor: (logFile = null) ->
     moment = new Moment()
     @logPath = "#{process.env.HOME}/.sneaky/logs"
-    @logFile = "#{@logPath}/#{moment.format('YYYY-MM-DD')}.log"
+    @logFile = logFile or "#{@logPath}/#{moment.format('YYYY-MM-DD')}.log"
     @prefix =
       log: ''
       err: ''

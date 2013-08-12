@@ -1,13 +1,14 @@
 async = require('async')
-readline = require('readline')
 fs = require('fs')
 jsYaml = require('js-yaml')
 Logger = require('./Logger')
 exec = require('child_process').exec
+moment = require('moment')
 
 localDir = "#{process.env.HOME}/.sneaky"  # local home directory
 configs = {}  # configs from ~/.sneakyrc
 logger = null  # pre define logger
+actionLogger = null  # recording action data
 
 quit = ->
   setTimeout(process.exit, 200)
@@ -81,6 +82,8 @@ after = (project, callback = ->) ->
         next(err)
       ), (err, result) ->
       callback(err)
+  else
+    callback(null)
 # finish define after hooks
 
 # get remote user and server
@@ -118,6 +121,7 @@ main = (options = {}, callback = ->) ->
 
   # start from here
   logger = new Logger()
+  # actionLogger = new Logger()
   logger.setPrefix({
     warn: 'WARN: '
     err: 'ERR: '
