@@ -5,10 +5,12 @@ Moment = require('moment')
 
 class Logger
 
-  constructor: (logFile = null) ->
+  constructor: (logFile = null, writeOptions = null, readOptions = null) ->
     moment = new Moment()
     @logPath = "#{process.env.HOME}/.sneaky/logs"
     @logFile = logFile or "#{@logPath}/#{moment.format('YYYY-MM-DD')}.log"
+    @writeOptions = writeOptions or {flag: 'a'}
+    @readOptions = readOptions or {encoding: 'utf8'}
     @prefix =
       log: ''
       err: ''
@@ -26,7 +28,7 @@ class Logger
 
   _log: (color, str) =>
     console.log(str[color])
-    fs.writeFile(@logFile, "#{str}\n", {flag: 'a'})
+    fs.writeFile(@logFile, "#{str}\n", @writeOptions)
 
   background: ->
     @log.log("progress is now running in background, you can checkout the log in #{logFile}.mess")
@@ -40,5 +42,11 @@ class Logger
 
   err: ->
     @_log.apply(this, ['red', "#{@prefix['err']}" + (v for i, v of arguments).join(' ')])
+
+  readFile: (callback = ->) ->
+    fs.readFile(@logFile, @readOptions, callback)
+
+  readFileSync: ->
+    return fs.readFileSync(@logFile, @readOptions)
 
 module.exports = Logger
