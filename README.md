@@ -11,6 +11,7 @@ teambition 部署及检测系统
 * encrypt with ssh
 * local pre-hook (before rsync)
 * remote post-hook (after rsync)
+* record daily action logs
 
 ## ~/.sneakyrc.example
 
