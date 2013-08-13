@@ -21,7 +21,7 @@ class Logger
     for type, string of prefix
       @prefix[type] = string
 
-  expandPath: (uPath) ->
+  @expandPath: (uPath) ->
     if matches = uPath.match(/^~(.*)/)  # home path
       return "#{process.env.HOME}#{matches[1]}"
     return uPath
