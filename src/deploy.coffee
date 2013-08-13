@@ -2,7 +2,7 @@ async = require('async')
 fs = require('fs')
 jsYaml = require('js-yaml')
 Logger = require('./Logger')
-exec = require('child_process').exec
+{exec} = require('child_process')
 Moment = require('moment')
 
 local =
@@ -26,7 +26,14 @@ deploy = (project, callback) ->
     return callback(null)
   local.records[project.name] = 'processing'
   local.recordLogger.log(JSON.stringify(local.records))
-  async.waterfall [((next) ->  # begin archive
+  async.waterfall [((next) ->
+    if project.autoTag
+      autoTag project, (err, tag) ->
+        project.version = tag unless err?
+        next(err)
+    else
+      next()
+    ), ((next) ->  # begin archive
     archive(project, next)
     ), ((next) ->
     before(project, next)
@@ -119,15 +126,27 @@ getServers = (project) ->
 # finish define getServers
 
 # define run command
-runCmd = (cmd, callback = ->) ->
-  local.logger.log(cmd)
+runCmd = (cmd, options, callback = ->) ->
+  local.logger.log(cmd) unless options.quiet
+  callback = (options or ->) if arguments.length < 3
   exec cmd, (err, data) ->
-    local.logger.log(data.toString())
+    local.logger.log(data.toString()) unless options.quiet
     callback(err, data)
 # finish define run command
 
 # auto generate tag from git repos
-autoTag: ->
+autoTag = (project, callback = ->) ->
+  return callback("#{project.source} is not a local repos, " +
+    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~]+$/)
+  process.chdir(Logger.expandPath(project.source))
+  runCmd 'git tag', {quiet: true}, (err, data) ->
+    return callback(err) if err?
+    moment = new Moment()
+    newTag = "#{project.tagPrefix or 'release'}-#{moment.format('YYYY.MM.DD.HHmmss')}"
+    tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
+    runCmd tagCmd, (err, data) ->
+      callback(err, newTag)
+
 # finish autoTag
 
 main = (options = {}, callback = ->) ->
@@ -149,7 +168,7 @@ main = (options = {}, callback = ->) ->
   # read configs
   local.configs = (->
     configPath = options.config or '~/.sneakyrc'
-    configPath = local.logger.expandPath(configPath)
+    configPath = Logger.expandPath(configPath)
     try
       return jsYaml.load(fs.readFileSync(configPath, 'utf-8'))
     catch e
@@ -162,7 +181,7 @@ main = (options = {}, callback = ->) ->
   # read configs end
 
   # check projects
-  until local.configs.projects? and local.configs.projects.length > 0
+  unless local.configs.projects? and local.configs.projects.length > 0
     local.logger.err('please define the project info in the `projects` collection')
   # check projects end
 

@@ -1,2 +1,2 @@
-require('cake-dog')
+require("cake-dog")
 require('./lib')
