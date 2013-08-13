@@ -2,7 +2,7 @@ async = require('async')
 fs = require('fs')
 jsYaml = require('js-yaml')
 Logger = require('./Logger')
-exec = require('child_process').exec
+{exec} = require('child_process')
 Moment = require('moment')
 
 local =
