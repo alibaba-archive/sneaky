@@ -236,4 +236,8 @@ main = (options = {}, callback = ->) ->
       callback(err, result)
   # deploy finish
 
+main.log = ->
+  logger = new Logger()
+  console.log logger.readFileSync()
+
 module.exports = main
