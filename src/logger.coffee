@@ -2,24 +2,38 @@ colors = require('colors')
 fs = require('fs')
 mkdirp = require('mkdirp')
 Moment = require('moment')
+_ = require('underscore')
 
 class Logger
 
-  constructor: (logFile = null, writeOptions = null, readOptions = null) ->
+  constructor: (fileName, options = {}) ->
     moment = new Moment()
     @logPath = "#{process.env.HOME}/.sneaky/logs"
-    @logFile = logFile or "#{@logPath}/#{moment.format('YYYY-MM-DD')}.log"
-    @writeOptions = writeOptions or {flag: 'a'}
-    @readOptions = readOptions or {encoding: 'utf8'}
+    @logFile = if fileName? then "#{@logPath}/#{moment.format('YYYY-MM-DD')}.#{fileName}.log" else
+      "#{@logPath}/#{moment.format('YYYY-MM-DD')}.log"
     @prefix =
       log: 'info'
       err: 'ERR!'
       warn: 'WARN'
+    @options = options
+    @options.write = @options.write or {flag: 'a'}
+    @options.read = @options.read or {encoding: 'utf8'}
+    @instanceOptions = _.clone(@options)
     mkdirp.sync(@logPath)
 
   setPrefix: (prefix) ->
     for type, string of prefix
       @prefix[type] = string
+    return this
+
+  setOptions: (options) ->
+    if options['background'] then @log("progress is now running in background, you can checkout the log in #{@logFile}")
+    @options = _.extend(@options, options)
+    return this
+
+  resetOptions: ->
+    @options = _.clone(@instanceOptions)
+    return this
 
   @expandPath: (uPath) ->
     if matches = uPath.match(/^~(.*)/)  # home path
@@ -27,12 +41,14 @@ class Logger
     return uPath
 
   _log: (str, prefix = '') =>
-    console.log("#{prefix}#{str}")
-    fs.writeFile(@logFile, "#{str}\n", @writeOptions)
+    return @background(str) if @options['background']
+    console.log("#{prefix}#{str}") unless @options['quiet']
+    fs.writeFile(@logFile, "#{str}\n", @options.write)
+    return this
 
   background: ->
-    @log.log("progress is now running in background, you can checkout the log in #{logFile}.mess")
     fs.writeFile(@logFile, "#{(v for i, v of arguments).join(' ')}\n", {flag: 'a'})
+    return this
 
   log: ->
     prefix = if @prefix['log'].length > 0 then "#{@prefix['log'].green}: " else ''
@@ -47,9 +63,9 @@ class Logger
     @_log.apply(this, ["#{(v for i, v of arguments).join(' ')}", prefix])
 
   readFile: (callback = ->) ->
-    fs.readFile(@logFile, @readOptions, callback)
+    fs.readFile(@logFile, @options.read, callback)
 
   readFileSync: ->
-    return fs.readFileSync(@logFile, @readOptions)
+    return fs.readFileSync(@logFile, @options.read)
 
 module.exports = Logger
