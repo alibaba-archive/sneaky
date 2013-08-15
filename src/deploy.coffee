@@ -3,6 +3,7 @@ fs = require('fs')
 jsYaml = require('js-yaml')
 Logger = require('./Logger')
 {exec} = require('child_process')
+{spawn} = require('child_process')
 Moment = require('moment')
 
 local =
@@ -58,7 +59,7 @@ archive = (project, callback = ->) ->
   prefix = project.prefix or project.name + '/'
   gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
     "--remote=#{project.source} --format=tar | tar -xf - -C #{local.dir}"
-  runCmd gitCmd, (err, data) ->
+  execCmd gitCmd, (err, data) ->
     return callback(err) if err?
     process.chdir("#{local.dir}/#{prefix}")
     callback(err)
@@ -76,7 +77,7 @@ rsync = (project, callback = ->) ->
       " -e \"ssh -p #{server[2]}\" " +
       excludes.join(' ') +
       " #{local.dir}/#{project.name} #{server[1]}@#{server[0]}:#{project.destination}"
-    runCmd rsyncCmd, (err, data) ->
+    execCmd rsyncCmd, (err, data) ->
       next(err)
     ), (err, result) ->
     callback(err)
@@ -86,7 +87,8 @@ rsync = (project, callback = ->) ->
 before = (project, callback = ->) ->
   if project.before? and typeof project.before == 'string'
     local.logger.log('before-hook:')
-    runCmd project.before, (err, data) ->
+    local.logger.log(project.before)
+    spawnCmd project.before, {background: true}, (err, data) ->
       callback(err)
   else
     callback(null)
@@ -99,7 +101,8 @@ after = (project, callback = ->) ->
     local.logger.log('after-hook:')
     async.eachSeries servers, ((server, next) ->
       sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
-      runCmd sshCmd, (err, data) ->
+      local.logger.log(sshCmd)
+      spawnCmd sshCmd, {background: true}, (err, data) ->
         next(err)
       ), (err, result) ->
       callback(err)
@@ -126,26 +129,60 @@ getServers = (project) ->
   return servers
 # finish define getServers
 
-# define run command
-runCmd = (cmd, options, callback = ->) ->
-  local.logger.log(cmd) unless options.quiet
-  callback = (options or ->) if arguments.length < 3
+# define exec command
+execCmd = (cmd, options, callback = ->) ->
+  if arguments.length < 3
+    callback = options or ->
+  else
+    local.logger.setOptions(options) if options?
+  local.logger.log(cmd)
   exec cmd, (err, data) ->
-    local.logger.log(data.toString()) unless options.quiet
+    local.logger.log(data.toString())
+    local.logger.resetOptions()
     callback(err, data)
-# finish define run command
+# finish define exec command
+
+# define spawn command
+spawnCmd = (cmd, options, callback = ->) ->
+  if arguments.length < 3
+    callback = options or ->
+  else
+    local.logger.setOptions(options) if options?
+
+  local.logger.log(cmd)
+  stdout = ''
+  stderr = ''
+  job = spawn('bash', ['-c', cmd])
+
+  job.stdout.setEncoding('utf-8')
+  job.stdout.on 'data', (data) ->
+    data = data.trim()
+    stdout += data
+    local.logger.log(data)
+
+  job.stderr.setEncoding('utf-8')
+  job.stderr.on 'data', (data) ->
+    data = data.trim()
+    stderr += data
+    local.logger.warn(data)
+
+  job.on 'close', (code) ->
+    local.logger.resetOptions()
+    return callback(stderr) if code != 0
+    callback(code, stdout)
+# finish define spawn command
 
 # auto generate tag from git repos
 autoTag = (project, callback = ->) ->
   return callback("#{project.source} is not a local repos, " +
     "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
   process.chdir(Logger.expandPath(project.source))
-  runCmd 'git tag', {quiet: true}, (err, data) ->
+  execCmd 'git tag', {quiet: true}, (err, data) ->
     return callback(err) if err?
     moment = new Moment()
     newTag = "#{project.tagPrefix or 'release'}-#{moment.format('YYYY.MM.DD.HHmmss')}"
     tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
-    runCmd tagCmd, (err, data) ->
+    execCmd tagCmd, (err, data) ->
       callback(err, newTag)
 
 # finish autoTag
@@ -153,9 +190,8 @@ autoTag = (project, callback = ->) ->
 main = (options = {}, callback = ->) ->
 
   # start from here
-  moment = new Moment()
   local.logger = new Logger()
-  local.recordLogger = new Logger("#{process.env.HOME}/.sneaky/logs/#{moment.format('YYYY-MM-DD')}.action.log", {flag: 'w'})
+  local.recordLogger = new Logger("action", {write: {flag: 'w'}})
 
   start = new Date()
   local.logger.log('=================================================================')
