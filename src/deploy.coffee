@@ -137,7 +137,7 @@ runCmd = (cmd, options, callback = ->) ->
 # auto generate tag from git repos
 autoTag = (project, callback = ->) ->
   return callback("#{project.source} is not a local repos, " +
-    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~]+$/)
+    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
   process.chdir(Logger.expandPath(project.source))
   runCmd 'git tag', {quiet: true}, (err, data) ->
     return callback(err) if err?
