@@ -1,6 +1,6 @@
 {
   "name": "Sneaky",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "Auto deployment with cake task, and be enjoy with git",
   "main": "lib/index.js",
   "scripts": {

@@ -3,3 +3,6 @@ option '-f', '--force', 'successfully deployed repos will not be deployed twice 
 
 task 'deploy', 'deploy source code to your servers', (options) ->
   require('./deploy')(options)
+
+task 'serv', 'start a server collect remote servers infomation', (options) ->
+  require('./server').serv()

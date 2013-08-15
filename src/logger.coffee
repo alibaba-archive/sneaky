@@ -12,9 +12,9 @@ class Logger
     @writeOptions = writeOptions or {flag: 'a'}
     @readOptions = readOptions or {encoding: 'utf8'}
     @prefix =
-      log: ''
-      err: ''
-      warn: ''
+      log: 'info'
+      err: 'ERR!'
+      warn: 'WARN'
     mkdirp.sync(@logPath)
 
   setPrefix: (prefix) ->
@@ -26,8 +26,8 @@ class Logger
       return "#{process.env.HOME}#{matches[1]}"
     return uPath
 
-  _log: (color, str) =>
-    console.log(str[color])
+  _log: (str, prefix = '') =>
+    console.log("#{prefix}#{str}")
     fs.writeFile(@logFile, "#{str}\n", @writeOptions)
 
   background: ->
@@ -35,13 +35,16 @@ class Logger
     fs.writeFile(@logFile, "#{(v for i, v of arguments).join(' ')}\n", {flag: 'a'})
 
   log: ->
-    @_log.apply(this, ['grey', "#{@prefix['log']}" + (v for i, v of arguments).join(' ')])
+    prefix = if @prefix['log'].length > 0 then "#{@prefix['log'].green}: " else ''
+    @_log.apply(this, ["#{(v for i, v of arguments).join(' ')}", prefix])
 
   warn: ->
-    @_log.apply(this, ['yellow', "#{@prefix['warn']}" + (v for i, v of arguments).join(' ')])
+    prefix = if @prefix['warn'].length > 0 then "#{@prefix['warn'].yellow}: " else ''
+    @_log.apply(this, ["#{(v for i, v of arguments).join(' ')}", prefix])
 
   err: ->
-    @_log.apply(this, ['red', "#{@prefix['err']}" + (v for i, v of arguments).join(' ')])
+    prefix = if @prefix['err'].length > 0 then "#{@prefix['err'].red}: " else ''
+    @_log.apply(this, ["#{(v for i, v of arguments).join(' ')}", prefix])
 
   readFile: (callback = ->) ->
     fs.readFile(@logFile, @readOptions, callback)

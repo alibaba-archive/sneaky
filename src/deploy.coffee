@@ -58,8 +58,9 @@ archive = (project, callback = ->) ->
   prefix = project.prefix or project.name + '/'
   gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
     "--remote=#{project.source} --format=tar | tar -xf - -C #{local.dir}"
-  process.chdir("#{local.dir}/#{prefix}")
   runCmd gitCmd, (err, data) ->
+    return callback(err) if err?
+    process.chdir("#{local.dir}/#{prefix}")
     callback(err)
 # finish define archive
 
@@ -137,7 +138,7 @@ runCmd = (cmd, options, callback = ->) ->
 # auto generate tag from git repos
 autoTag = (project, callback = ->) ->
   return callback("#{project.source} is not a local repos, " +
-    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~]+$/)
+    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
   process.chdir(Logger.expandPath(project.source))
   runCmd 'git tag', {quiet: true}, (err, data) ->
     return callback(err) if err?
@@ -155,11 +156,6 @@ main = (options = {}, callback = ->) ->
   moment = new Moment()
   local.logger = new Logger()
   local.recordLogger = new Logger("#{process.env.HOME}/.sneaky/logs/#{moment.format('YYYY-MM-DD')}.action.log", {flag: 'w'})
-
-  local.logger.setPrefix({
-    warn: 'WARN: '
-    err: 'ERR: '
-    })
 
   start = new Date()
   local.logger.log('=================================================================')
