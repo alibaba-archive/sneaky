@@ -97,10 +97,11 @@ before = (project, callback = ->) ->
 # hooks after rsync deploy
 after = (project, callback = ->) ->
   servers = getServers(project)
+  prefix = project.prefix or project.name + '/'
   if project.after? and typeof project.after == 'string'
     local.logger.log('after-hook:')
     async.eachSeries servers, ((server, next) ->
-      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
+      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"source /etc/profile; chdir #{project.destination}/#{prefix}; #{project.after}\""
       local.logger.log(sshCmd)
       spawnCmd sshCmd, {background: true}, (err, data) ->
         next(err)
