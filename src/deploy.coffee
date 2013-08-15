@@ -58,8 +58,9 @@ archive = (project, callback = ->) ->
   prefix = project.prefix or project.name + '/'
   gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
     "--remote=#{project.source} --format=tar | tar -xf - -C #{local.dir}"
-  process.chdir("#{local.dir}/#{prefix}")
   runCmd gitCmd, (err, data) ->
+    return callback(err) if err?
+    process.chdir("#{local.dir}/#{prefix}")
     callback(err)
 # finish define archive
 
