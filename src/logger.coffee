@@ -66,6 +66,10 @@ class Logger
     fs.readFile(@logFile, @options.read, callback)
 
   readFileSync: ->
-    return fs.readFileSync(@logFile, @options.read)
+    try
+      return fs.readFileSync(@logFile, @options.read)
+    else e
+      @err e.toString()
+      return null
 
 module.exports = Logger
