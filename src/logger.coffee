@@ -68,8 +68,14 @@ class Logger
   readFileSync: ->
     try
       return fs.readFileSync(@logFile, @options.read)
-    else e
-      @err e.toString()
+    catch e
+      @err(e.toString())
       return null
+
+  serv: (req, res, next) =>
+    moment = new Moment()
+    console.log req
+    @log("#{req.method} #{req.url} #{res.statusCode} #{moment.format('YYYY-MM-DD HH:mm:ss')}")
+    next()
 
 module.exports = Logger
