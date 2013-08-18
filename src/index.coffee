@@ -3,5 +3,5 @@ if task?
 
 module.exports =
   deploy: require('./deploy')
-  client: require('./client')
-  server: require('./server')
+  Client: require('./client')
+  Server: require('./server')
