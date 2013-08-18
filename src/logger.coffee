@@ -72,10 +72,10 @@ class Logger
       @err(e.toString())
       return null
 
-  serv: (req, res, next) =>
+  serv: (tokens, req, res) =>
     moment = new Moment()
-    console.log req
-    @log("#{req.method} #{req.url} #{res.statusCode} #{moment.format('YYYY-MM-DD HH:mm:ss')}")
-    next()
+    @log("#{req.method} #{req.url} #{res.statusCode} #{new Date() - req._startTime} " +
+      "#{moment.format('YYYY-MM-DD HH:mm:ss')}")
+    return null
 
 module.exports = Logger

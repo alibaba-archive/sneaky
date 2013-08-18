@@ -7,6 +7,7 @@ express = require('express')
 http = require('http')
 port = 3356
 Logger = require('./logger')
+Router = require('./Router')
 
 class Server
 
@@ -18,13 +19,17 @@ class Server
     @server = http.createServer(@app)
 
     @app.configure () =>
-      @app.use(@logger.serv)
+      @app.use(express.logger(@logger.serv))
       @app.use(express.cookieParser())
       @app.use(@app.router)
-
-    @app.get '/', (req, res) ->
-      res.send('Welcome to Sneaky!')
-
+      @app.use(express.favicon("#{__dirname}/../public/favicon.ico"))
+      @app.use('/', express.static("#{__dirname}/../public"))
+      @app.get '/users/:id', (req, res) ->
+        Router.aliasRoute(req, res, {
+          ctrl: 'user'
+          method: 'index'
+          })
+      Router.route(@app)
     @server.listen(port)
     @logger.log("server listen on #{port}")
 
