@@ -4,5 +4,8 @@ option '-f', '--force', 'successfully deployed repos will not be deployed twice 
 task 'deploy', 'deploy source code to your servers', (options) ->
   require('./deploy')(options)
 
+task 'deploy:log', 'look up deploy logs', (options) ->
+  require('./deploy').log()
+
 task 'serv', 'start a server collect remote servers infomation', (options) ->
   require('./server').serv()
