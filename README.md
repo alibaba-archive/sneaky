@@ -37,3 +37,15 @@ projects:
   # before: bash install.sh
   servers: [summer]
 ```
+
+## example
+
+deploy all projects defined in configure file
+```
+$ cake deploy
+```
+
+deploy chosen projects
+```
+$ cake -p Web deploy
+```
