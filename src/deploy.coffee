@@ -225,7 +225,15 @@ main = (options = {}, callback = ->) ->
     catch e
       local.records = {}
     local.force = options.force or false
-    async.eachSeries local.configs.projects, deploy, (err, result) ->
+    projects = []
+    if options.projects?
+      projectNames = options.projects.split(',')
+      local.configs.projects.forEach (project) ->
+        if project.name in projectNames
+          projects.push(project)
+    else
+      projects = local.configs.projects
+    async.eachSeries projects, deploy, (err, result) ->
       if err?
         local.logger.err(err.toString())
         quit()
