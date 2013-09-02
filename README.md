@@ -45,8 +45,6 @@ projects:
   Sneaky has a daily lock on successfully deployed projects, that means same project will not be deployed twice. But if you use `-f` option, then you can redeploy the project.
 * `-p, --projects`     deploy the chosen project, multi projects splited by ","
 
-Sneaky
-
 ## example
 
 Deploy all projects defined in configure file
