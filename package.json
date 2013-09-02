@@ -1,6 +1,6 @@
 {
   "name": "Sneaky",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Auto deployment with cake task, and be enjoy with git",
   "main": "lib/index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:teambition/Sneaker"
+    "url": "git@github.com:teambition/Sneaky"
   },
   "keywords": [
     "deploy",
@@ -30,7 +30,7 @@
     "mkdirp": "~0.3.5",
     "js-yaml": "~2.1.0",
     "underscore": "~1.5.1",
-    "cake-dog": "~0.1.7",
+    "cake-dog": "~0.1.12",
     "express": "~3.3.5",
     "socket.io": "~0.9.16"
   }
