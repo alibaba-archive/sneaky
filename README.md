@@ -1,7 +1,7 @@
 Sneaky
 =======
 
-teambition 部署及检测系统
+Teambition 部署及检测系统
 
 ## feature
 
@@ -22,7 +22,7 @@ servers: [summer]
 projects:
 - name: Project1
   source: ~/path/to/project1  # source code repos
-  version: HEAD  # git version or tag name or branch name, is use autoTag, this option will not work
+  version: HEAD  # git version or tag name or branch name, if use autoTag, this option will not work
   destination: /tmp/sneaky  # deploy to destination
   servers: [summer|root|22]  # deploy servers [server|user|port]
   # rsyncCmd: qrysnc  # self defined rsync function
@@ -38,14 +38,23 @@ projects:
   servers: [summer]
 ```
 
+## options
+
+* `-c, --config`       define the config file path, default is ~/.sneakyrc
+* `-f, --force`
+  Sneaky has a daily lock on successfully deployed projects, that means same project will not be deployed twice. But if you use `-f` option, then you can redeploy the project.
+* `-p, --projects`     deploy the chosen project, multi projects splited by ","
+
+Sneaky
+
 ## example
 
-deploy all projects defined in configure file
+Deploy all projects defined in configure file
 ```
 $ cake deploy
 ```
 
-deploy chosen projects
+Deploy chosen projects
 ```
 $ cake -p Web deploy
 ```
