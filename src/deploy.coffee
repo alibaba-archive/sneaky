@@ -76,7 +76,7 @@ rsync = (project, callback = ->) ->
     rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
       " -e \"ssh -p #{server[2]}\" " +
       excludes.join(' ') +
-      " #{local.dir}/#{project.name} #{server[1]}@#{server[0]}:#{project.destination}"
+      " #{local.dir}/#{project.name}/ #{server[1]}@#{server[0]}:#{project.destination}"
     execCmd rsyncCmd, (err, data) ->
       next(err)
     ), (err, result) ->
@@ -101,7 +101,7 @@ after = (project, callback = ->) ->
   if project.after? and typeof project.after == 'string'
     local.logger.log('after-hook:')
     async.eachSeries servers, ((server, next) ->
-      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"source /etc/profile; chdir #{project.destination}/#{prefix}; #{project.after}\""
+      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"source /etc/profile; cd #{project.destination}; #{project.after}\""
       local.logger.log(sshCmd)
       spawnCmd sshCmd, {background: true}, (err, data) ->
         next(err)
