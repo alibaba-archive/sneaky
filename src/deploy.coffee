@@ -101,7 +101,7 @@ after = (project, callback = ->) ->
   if project.after? and typeof project.after == 'string'
     local.logger.log('after-hook:')
     async.eachSeries servers, ((server, next) ->
-      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"source /etc/profile; cd #{project.destination}; #{project.after}\""
+      sshCmd = "ssh #{server[1]}@#{server[0]} -p #{server[2]} \"cd #{project.destination}; #{project.after}\""
       local.logger.log(sshCmd)
       spawnCmd sshCmd, {background: true}, (err, data) ->
         next(err)
