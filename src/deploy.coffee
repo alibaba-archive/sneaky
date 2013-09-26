@@ -1,4 +1,5 @@
 async = require('async')
+path = require('path')
 fs = require('fs')
 jsYaml = require('js-yaml')
 Logger = require('./Logger')
@@ -57,7 +58,7 @@ deploy = (project, callback) ->
 # archive from git and migrate to temporary directory
 archive = (project, callback = ->) ->
   prefix = project.prefix or project.name + '/'
-  gitCmd = "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
+  gitCmd = "rm -rf #{path.join(local.dir, prefix)}; git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
     "--remote=#{project.source} --format=tar | tar -xf - -C #{local.dir}"
   execCmd gitCmd, (err, data) ->
     return callback(err) if err?
