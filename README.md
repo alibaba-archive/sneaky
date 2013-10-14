@@ -40,19 +40,17 @@ projects:
 
 ## options
 
-* `-c, --config`       define the config file path, default is ~/.sneakyrc
 * `-f, --force`
   Sneaky has a daily lock on successfully deployed projects, that means same project will not be deployed twice. But if you use `-f` option, then you can redeploy the project.
-* `-p, --projects`     deploy the chosen project, multi projects splited by ","
 
 ## example
 
 Deploy all projects defined in configure file
 ```
-$ cake deploy
+$ sneaky
 ```
 
 Deploy chosen projects
 ```
-$ cake -p Web deploy
+$ sneaky Core
 ```

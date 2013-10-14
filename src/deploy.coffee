@@ -1,146 +1,29 @@
 async = require('async')
 path = require('path')
-fs = require('fs')
+fs = require('graceful-fs')
 jsYaml = require('js-yaml')
-Logger = require('./Logger')
+_ = require('underscore')
+logger = require('graceful-logger')
 {exec} = require('child_process')
 {spawn} = require('child_process')
 Moment = require('moment')
+mkdirp = require('mkdirp')
 
-local =
-  dir: "#{process.env.HOME}/.sneaky"  # local home directory
-  configs: {}  # configs from ~/.sneakyrc
-  logger: null  # pre define logger
-  force: false  # choose force deploy or false
-  records: {}  # default recodes
-  recordLogger: null  # action data recorder
+sep1 = '================================================================='
 
-quit = ->
-  setTimeout(process.exit, 200)
+sep2 = '-----------------------------------------------------------------'
 
-# deploy function for each project
-deploy = (project, callback) ->
-  local.logger.log('-----------------------------------------------------------------')
-  local.logger.log("start deploy #{project.name}")
-  if local.records[project.name] in ['success', 'processing'] and not local.force  # could not deploy
-    local.logger.warn("#{project.name} has been deployed, skipping")
-    local.logger.log('-----------------------------------------------------------------')
-    return callback(null)
-  local.records[project.name] = 'processing'
-  local.recordLogger.log(JSON.stringify(local.records))
-  async.waterfall [((next) ->
-    if project.autoTag
-      autoTag project, (err, tag) ->
-        project.version = tag unless err?
-        next(err)
-    else
-      next()
-    ), ((next) ->  # begin archive
-    archive(project, next)
-    ), ((next) ->
-    before(project, next)
-    ), ((next) ->
-    rsync(project, next)
-    ), ((next) ->
-    after(project, next)
-    )], (err, result) ->
-      if err?
-        local.logger.err(err.toString())
-        local.records[project.name] = 'fail'
-      else
-        local.records[project.name] = 'success'
-        local.logger.log("finish deploy #{project.name}")
-      local.recordLogger.log(JSON.stringify(local.records))
-      local.logger.log('-----------------------------------------------------------------')
-      callback(err, result)
-# finish define deploy
-
-# archive from git and migrate to temporary directory
-archive = (project, callback = ->) ->
-  prefix = project.prefix or project.name + '/'
-  gitCmd = "rm -rf #{path.join(local.dir, prefix)}; git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
-    "--remote=#{project.source} --format=tar | tar -xf - -C #{local.dir}"
-  execCmd gitCmd, (err, data) ->
-    return callback(err) if err?
-    process.chdir("#{local.dir}/#{prefix}")
-    callback(err)
-# finish define archive
-
-# use rsync to deploy local source code to remote servers
-rsync = (project, callback = ->) ->
-  servers = getServers(project)
-  excludes = []
-  if typeof project.excludes == 'object' and project.excludes.length > 0
-    excludes = project.excludes.map (item) ->
-      return "--exclude=#{item}"
-  async.eachSeries servers, ((server, next) ->
-    rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
-      " -e \"ssh -p #{server[2]}\" " +
-      excludes.join(' ') +
-      " #{local.dir}/#{project.name}/ #{server[1]}@#{server[0]}:#{project.destination}"
-    execCmd rsyncCmd, (err, data) ->
-      next(err)
-    ), (err, result) ->
-    callback(err)
-# finish define rsync
-
-# hooks before rsync deploy
-before = (project, callback = ->) ->
-  if project.before? and typeof project.before == 'string'
-    local.logger.log('before-hook:')
-    local.logger.log(project.before)
-    spawnCmd project.before, {background: true}, (err, data) ->
-      callback(err)
+expandPath = (srcPath) ->
+  if matches = srcPath.match(/^~(.*)/)
+    return "#{process.env.HOME}#{matches[1]}"
   else
-    callback(null)
-# finish define before hooks
-
-# hooks after rsync deploy
-after = (project, callback = ->) ->
-  servers = getServers(project)
-  prefix = project.prefix or project.name + '/'
-  if project.after? and typeof project.after == 'string'
-    local.logger.log('after-hook:')
-    async.eachSeries servers, ((server, next) ->
-      sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
-      local.logger.log(sshCmd)
-      spawnCmd sshCmd, {background: true}, (err, data) ->
-        next(err)
-      ), (err, result) ->
-      callback(err)
-  else
-    callback(null)
-# finish define after hooks
-
-# get remote user and server
-getServers = (project) ->
-  servers = []
-  if typeof project.servers == 'string'
-    [server, user, port] = project.servers.split('|')
-    user = user or local.configs.user or 'root'  # ssh user name
-    port = port or '22'  # ssh port
-    servers.push([server, user, port])
-  else if typeof project.servers == 'object'
-    for i, item of project.servers
-      [server, user, port] = item.split('|')
-      user = user or local.configs.user or 'root'  # ssh user name
-      port = port or '22'  # ssh port
-      servers.push([server, user, port])
-  else if local.configs.servers?
-    return getServers(local.configs)
-  return servers
-# finish define getServers
+    return srcPath
 
 # define exec command
-execCmd = (cmd, options, callback = ->) ->
-  if arguments.length < 3
-    callback = options or ->
-  else
-    local.logger.setOptions(options) if options?
-  local.logger.log(cmd)
+execCmd = (cmd, callback = ->) ->
+  logger.info("Run command: [#{cmd}]")
   exec cmd, (err, data) ->
-    local.logger.log(data.toString())
-    local.logger.resetOptions()
+    logger.info(data.toString())
     callback(err, data)
 # finish define exec command
 
@@ -148,10 +31,8 @@ execCmd = (cmd, options, callback = ->) ->
 spawnCmd = (cmd, options, callback = ->) ->
   if arguments.length < 3
     callback = options or ->
-  else
-    local.logger.setOptions(options) if options?
+  isQuiet = options.quiet or false
 
-  local.logger.log(cmd)
   stdout = ''
   stderr = ''
   job = spawn('bash', ['-c', cmd])
@@ -160,93 +41,200 @@ spawnCmd = (cmd, options, callback = ->) ->
   job.stdout.on 'data', (data) ->
     data = data.trim()
     stdout += data
-    local.logger.log(data)
+    logger.info(data)
 
   job.stderr.setEncoding('utf-8')
   job.stderr.on 'data', (data) ->
     data = data.trim()
     stderr += data
-    local.logger.warn(data)
+    logger.warn(data)
 
   job.on 'close', (code) ->
-    local.logger.resetOptions()
     return callback(stderr) if code != 0
     callback(code, stdout)
 # finish define spawn command
 
-# auto generate tag from git repos
-autoTag = (project, callback = ->) ->
-  return callback("#{project.source} is not a local repos, " +
-    "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
-  process.chdir(Logger.expandPath(project.source))
-  execCmd 'git tag', {quiet: true}, (err, data) ->
-    return callback(err) if err?
-    moment = new Moment()
-    newTag = "#{project.tagPrefix or 'release'}-#{moment.format('YYYY.MM.DD.HHmmss')}"
-    tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
-    execCmd tagCmd, (err, data) ->
-      callback(err, newTag)
+class Deploy
 
-# finish autoTag
+  constructor: (options) ->
+    @options = _.extend({
+      chdir: "#{process.env.HOME}/.sneaky"
+      force: false
+    }, options)
 
-main = (options = {}, callback = ->) ->
-
-  # start from here
-  local.logger = new Logger()
-  local.recordLogger = new Logger("action", {write: {flag: 'w'}})
-
-  start = new Date()
-  local.logger.log('=================================================================')
-  local.logger.log('start', start.toString())
-
-  # read configs
-  local.configs = (->
-    configPath = options.config or '~/.sneakyrc'
-    configPath = Logger.expandPath(configPath)
+  loadConfigs: ->
+    configFile = expandPath(@options.config or '~/.sneakyrc')
     try
-      return jsYaml.load(fs.readFileSync(configPath, 'utf-8'))
-    catch e
-      if e?
-        switch e.name
-          when 'YAMLException' then local.logger.err("please check your configure file's format")
-          else local.logger.err("missing sneakyrc file, did you put this file in path #{configPath} ?")
-      quit()
-    )()
-  # read configs end
+      @configs = jsYaml.load(fs.readFileSync(configFile, 'utf-8'))
+    catch err
+      switch err?.name
+        when 'YAMLException' then logger.err("please check your configure file's format")
+        else logger.err("missing sneakyrc file, did you put this file in path #{configFile} ?")
+    unless @configs.projects? and @configs.projects.length > 0
+      logger.err('please define the project info in the `projects` collection')
+    return @configs
 
-  # check projects
-  unless local.configs.projects? and local.configs.projects.length > 0
-    local.logger.err('please define the project info in the `projects` collection')
-  # check projects end
+  getServers: (project) =>
+    servers = []
+    if typeof project.servers == 'string'
+      [server, user, port] = project.servers.split('|')
+      user = user or local.configs.user or 'root'  # ssh user name
+      port = port or '22'  # ssh port
+      servers.push([server, user, port])
+    else if typeof project.servers == 'object'
+      for i, item of project.servers
+        [server, user, port] = item.split('|')
+        user = user or local.configs.user or 'root'  # ssh user name
+        port = port or '22'  # ssh port
+        servers.push([server, user, port])
+    else if @configs.servers?
+      return @getServers(@configs)
+    return servers
 
-  # start deploy
-  local.recordLogger.readFile (err, data) ->
+  readActionRecord: ->
+    moment = new Moment
     try
-      local.records = JSON.parse(data) if data?
+      actionRecord = fs.readFileSync(path.join(@options.chdir, "var/actions/#{moment.format('YYYY-MM-DD')}.txt"))
+      @records = JSON.parse(actionRecord)
     catch e
-      local.records = {}
-    local.force = options.force or false
-    projects = []
-    if options.projects?
-      projectNames = options.projects.split(',')
-      local.configs.projects.forEach (project) ->
-        if project.name in projectNames
-          projects.push(project)
-    else
-      projects = local.configs.projects
-    async.eachSeries projects, deploy, (err, result) ->
+      @records = {}
+
+  writeActionRecord: (callback = ->) ->
+    actionDir = path.join(@options.chdir, "var/actions")
+    mkdirp actionDir, (err, parent) =>
       if err?
-        local.logger.err(err.toString())
-        quit()
-      end = new Date()
-      local.logger.log('time cost:', end - start)
-      local.logger.log('finish', end)
-      local.logger.log('=================================================================\n')
+        logger.err("Cound not mkdir #{actionDir}")
+        return callback(err, parent)
+      else
+        moment = new Moment
+        fs.writeFile path.join(actionDir, "#{moment.format('YYYY-MM-DD')}.txt"),
+          JSON.stringify(@records, null, 2), (err, result) ->
+            logger.err("Cound not write record file") if err?
+            return callback(err, result)
+
+  run: (callback = ->) ->
+    configs = @loadConfigs()
+    return callback("Missing config file") unless configs?
+    start = new Date()
+    logger.info(sep1)
+    logger.info('Job start at', start)
+    records = @readActionRecord()
+    projects = []
+    allProjects = {}
+    allProjects[project.name] = project for i, project of @configs.projects
+    if @options.projects?  # Choose specific projects
+      projectNames = @options.projects.split(',')
+      projectNames.forEach (projectName) ->
+        if allProjects[projectName]?
+          projects.push(allProjects[projectName])
+        else
+          logger.warn("Can not find project [#{projectName}]")
+    else
+      projects = @configs.projects
+    async.eachSeries projects, @deploy, (err, result) ->
+      if err?
+        logger.err(err.toString())
+        logger.err('Deploy Failed!')
+      else
+        end = new Date()
+        logger.info('Time cost:', (end - start) / 1000, " Seconds")
+        logger.info('Deploy finished at', end)
+        logger.info('Please checkout your remote directory')
+      logger.info(sep1)
       callback(err, result)
-  # deploy finish
 
-main.log = ->
-  logger = new Logger()
-  console.log logger.readFileSync()
+  deploy: (project, callback = ->) =>
+    logger.info(sep2)
+    logger.info("Start deploy [#{project.name}]")
+    if @records[project.name] in ['success', 'processing'] and not @options.force
+      logger.warn("Project [#{project.name}] has been deployed, skipping...")
+      logger.info(sep2)
+      return callback(null)
+    @records[project.name] = 'processing'
+    @writeActionRecord()
+    async.waterfall [((next) =>
+        @autoTag(project, next)
+      )
+      , @archive
+      , @before
+      , @rsync
+      , @after
+      ], (err, result) =>
+        if err?
+          logger.err(err)
+          @records[project.name] = 'fail'
+        else
+          @records[project.name] = 'success'
+          logger.info("Finish deploy [#{project.name}]")
+        @writeActionRecord()
+        logger.info(sep2)
+        callback(err, project)
 
-module.exports = main
+  autoTag: (project, callback = ->) =>
+    return callback(null, project) unless project.autoTag
+    return callback("#{project.source} is not a local repos, " +
+      "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
+    process.chdir(expandPath(project.source))
+    execCmd 'git tag', (err, data) =>
+      return callback(err) if err?
+      moment = new Moment()
+      newTag = "#{project.tagPrefix or 'release'}-#{moment.format('YYYY.MM.DD.HHmmss')}"
+      tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
+      execCmd tagCmd, (err, data) ->
+        project.version = newTag
+        callback(err, project)
+
+  archive: (project, callback = ->) =>
+    prefix = project.prefix or project.name + '/'
+    gitCmd = "rm -rf #{path.join(@options.chdir, prefix)}; git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
+      "--remote=#{project.source} --format=tar | tar -xf - -C #{@options.chdir}"
+    execCmd gitCmd, (err, data) =>
+      process.chdir("#{@options.chdir}/#{prefix}")
+      callback(err, project)
+
+  rsync: (project, callback = ->) =>
+    servers = @getServers(project)
+    excludes = []
+    if typeof project.excludes == 'object' and project.excludes.length > 0
+      excludes = project.excludes.map (item) =>
+        return "--exclude=#{item}"
+    async.eachSeries servers, ((server, next) =>
+      rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
+        " -e \"ssh -p #{server[2]}\" " +
+        excludes.join(' ') +
+        " #{@options.chdir}/#{project.name}/ #{server[1]}@#{server[0]}:#{project.destination}"
+      execCmd rsyncCmd, (err, data) ->
+        next(err)
+      ), (err, result) ->
+      callback(err, project)
+
+  before: (project, callback = ->) =>
+    if project.before? and typeof project.before == 'string'
+      logger.info('Before hook:', project.before)
+      spawnCmd project.before, (err, data) ->
+        callback(err, project)
+    else
+      callback(null, project)
+
+  after: (project, callback = ->) =>
+    servers = @getServers(project)
+    prefix = project.prefix or project.name + '/'
+    if project.after? and typeof project.after == 'string'
+      logger.info('After hook:')
+      async.eachSeries servers, ((server, next) ->
+        sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
+        logger.info(sshCmd)
+        spawnCmd sshCmd, (err, data) ->
+          next(err)
+        ), (err, result) ->
+        callback(err, project)
+    else
+      callback(null, project)
+
+deploy = (options) ->
+  $deploy = new Deploy(options)
+  $deploy.run()
+
+deploy.Deploy = Deploy
+
+module.exports = deploy
