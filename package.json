@@ -1,10 +1,9 @@
 {
   "name": "Sneaky",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Auto deployment with cake task, and be enjoy with git",
   "main": "lib/index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git@github.com:teambition/Sneaky"
