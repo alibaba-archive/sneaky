@@ -2,8 +2,11 @@ commander = require('commander')
 _p = require('../package')
 deploy = require('./deploy')
 
-commander.version(_p.version).usage('<options> <projects>')
-commander.option('-f, --force', 'Redeploy repos')
+commander.version(_p.version).usage('<command> <options> <projects>')
+
+commander.option('-f, --force', 'redeploy repository')
+commander.option('-c, --config', 'user defined configure file')
+
 args = commander.parse(process.argv)
 
 cli = ->
