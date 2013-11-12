@@ -1,18 +1,15 @@
 {
   "name": "Sneaky",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Auto deployment with cake task, and be enjoy with git",
   "main": "lib/index.js",
-  "scripts": {
-    "test": "echo test"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git@github.com:teambition/Sneaky"
   },
   "keywords": [
     "deploy",
-    "cake",
     "coffee",
     "git",
     "ops"
@@ -30,8 +27,6 @@
     "mkdirp": "~0.3.5",
     "js-yaml": "~2.1.0",
     "underscore": "~1.5.1",
-    "express": "~3.3.5",
-    "socket.io": "~0.9.16",
     "commander": "~2.0.0",
     "graceful-logger": "~0.1.2",
     "graceful-fs": "~2.0.1"
