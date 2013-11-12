@@ -14,7 +14,7 @@
     "git",
     "ops"
   ],
-  "author": "teambition",
+  "author": "sailxjx",
   "license": "MIT",
   "devDependencies": {
     "cake-dog": "~0.2.0",
@@ -23,15 +23,14 @@
     "mocha": "~1.14.0"
   },
   "dependencies": {
-    "colors": "~0.6.1",
+    "colors": "~0.6.2",
     "async": "~0.2.9",
     "read": "~1.0.5",
     "moment": "~2.1.0",
     "mkdirp": "~0.3.5",
-    "js-yaml": "~2.1.0",
-    "underscore": "~1.5.1",
+    "underscore": "~1.5.2",
     "commander": "~2.0.0",
-    "graceful-logger": "~0.1.2",
+    "graceful-logger": "~0.1.4",
     "graceful-fs": "~2.0.1",
     "ini": "~1.1.0"
   }

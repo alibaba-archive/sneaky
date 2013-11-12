@@ -1,4 +1,3 @@
-should = require('should')
 fs = require('fs')
 ini = require('ini')
 

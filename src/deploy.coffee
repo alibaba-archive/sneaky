@@ -1,11 +1,10 @@
 async = require('async')
 path = require('path')
 fs = require('graceful-fs')
-jsYaml = require('js-yaml')
 _ = require('underscore')
+ini = require('ini')
 logger = require('graceful-logger')
-{exec} = require('child_process')
-{spawn} = require('child_process')
+{exec, spawn} = require('child_process')
 Moment = require('moment')
 mkdirp = require('mkdirp')
 
@@ -60,88 +59,93 @@ class Deploy
     @options = _.extend({
       chdir: "#{process.env.HOME}/.sneaky"
       force: false
+      config: "#{process.env.HOME}/.sneakyrc"
     }, options)
 
-  loadConfigs: ->
+  loadConfigs: (callback = ->) ->
     configFile = expandPath(@options.config or '~/.sneakyrc')
-    try
-      @configs = jsYaml.load(fs.readFileSync(configFile, 'utf-8'))
-    catch err
-      switch err?.name
-        when 'YAMLException' then logger.err("please check your configure file's format")
-        else logger.err("missing sneakyrc file, did you put this file in path #{configFile} ?")
-    unless @configs.projects? and @configs.projects.length > 0
-      logger.err('please define the project info in the `projects` collection')
-    return @configs
+    fs.readFile configFile, (err, content) =>
+      return callback(err, content) if err?
+      configs = ini.parse(content.toString())
+      _configs = {}
+      projectPrefix = 'project:'
+      for k, v of configs
+        if k.indexOf(projectPrefix) is 0
+          _configs.projects = {} unless _configs.projects?
+          _project = v
+          _project.name = k[projectPrefix.length..].trim()
+          _configs['projects'][_project.name] = _project
+          continue
+        _configs[k] = v
+      if _.isEmpty(_configs.projects)
+        logger.err('please define the project info in the `projects` collection', 1)
+      @configs = _configs
+      callback(err, _configs)
 
   getServers: (project) =>
     servers = []
     if typeof project.servers == 'string'
       [server, user, port] = project.servers.split('|')
-      user = user or local.configs.user or 'root'  # ssh user name
+      user = user or @configs.user or 'root'  # ssh user name
       port = port or '22'  # ssh port
       servers.push([server, user, port])
     else if typeof project.servers == 'object'
       for i, item of project.servers
         [server, user, port] = item.split('|')
-        user = user or local.configs.user or 'root'  # ssh user name
+        user = user or @configs.user or 'root'  # ssh user name
         port = port or '22'  # ssh port
         servers.push([server, user, port])
     else if @configs.servers?
       return @getServers(@configs)
     return servers
 
-  readActionRecord: ->
+  readRecords: ->
     moment = new Moment
+    recordDir = path.join(@options.chdir, "_records")
     try
-      actionRecord = fs.readFileSync(path.join(@options.chdir, "var/actions/#{moment.format('YYYY-MM-DD')}.txt"))
-      @records = JSON.parse(actionRecord)
+      @records = require(recordDir, "#{moment.format('YYYYMMDD')}.json")
     catch e
       @records = {}
+    return @records
 
-  writeActionRecord: (callback = ->) ->
-    actionDir = path.join(@options.chdir, "var/actions")
-    mkdirp actionDir, (err, parent) =>
-      if err?
-        logger.err("Cound not mkdir #{actionDir}")
-        return callback(err, parent)
-      else
-        moment = new Moment
-        fs.writeFile path.join(actionDir, "#{moment.format('YYYY-MM-DD')}.txt"),
-          JSON.stringify(@records, null, 2), (err, result) ->
-            logger.err("Cound not write record file") if err?
-            return callback(err, result)
+  writeRecords: (callback = ->) ->
+    recordDir = path.join(@options.chdir, "_records")
+    mkdirp recordDir, (err, parent) =>
+      logger.err("Cound not mkdir #{recordDir}", 1) if err?
+      moment = new Moment
+      fs.writeFile path.join(recordDir, "#{moment.format('YYYYMMDD')}.json"),
+        JSON.stringify(@records, null, 2), (err, result) ->
+          logger.err("Cound not write record file", 1) if err?
+          return callback(err, result)
 
   run: (callback = ->) ->
-    configs = @loadConfigs()
-    return callback("Missing config file") unless configs?
-    start = new Date()
-    logger.info(sep1)
-    logger.info('Job start at', start)
-    records = @readActionRecord()
-    projects = []
-    allProjects = {}
-    allProjects[project.name] = project for i, project of @configs.projects
-    if @options.projects?  # Choose specific projects
-      projectNames = @options.projects.split(',')
-      projectNames.forEach (projectName) ->
-        if allProjects[projectName]?
-          projects.push(allProjects[projectName])
-        else
-          logger.warn("Can not find project [#{projectName}]")
-    else
-      projects = @configs.projects
-    async.eachSeries projects, @deploy, (err, result) ->
-      if err?
-        logger.err(err.toString())
-        logger.err('Deploy Failed!')
-      else
-        end = new Date()
-        logger.info('Time cost:', (end - start) / 1000, " Seconds")
-        logger.info('Deploy finished at', end)
-        logger.info('Please checkout your remote directory')
+    @loadConfigs (err, configs) =>
+      return callback("Missing config file") unless configs?
+      start = new Date()
       logger.info(sep1)
-      callback(err, result)
+      logger.info('Job start at', start)
+      records = @readRecords()
+      runProjects = []
+      allProjects = configs.projects
+      if @options.projects?.length > 0  # Choose specific projects
+        @options.projects.forEach (projectName) ->
+          if allProjects[projectName]?
+            runProjects.push(allProjects[projectName])
+          else
+            logger.warn("Can not find project [#{projectName}]")
+      else
+        runProjects = (v for k, v of configs.projects)
+      async.eachSeries runProjects, @deploy, (err, result) ->
+        if err?
+          logger.err(err.toString())
+          logger.err('Deploy Failed!', 1)
+        else
+          end = new Date()
+          logger.info('Time cost:', (end - start) / 1000, " Seconds")
+          logger.info('Deploy finished at', end)
+          logger.info('Please checkout your remote directory')
+        logger.info(sep1)
+        callback(err, result)
 
   deploy: (project, callback = ->) =>
     logger.info(sep2)
@@ -151,7 +155,7 @@ class Deploy
       logger.info(sep2)
       return callback(null)
     @records[project.name] = 'processing'
-    @writeActionRecord()
+    @writeRecords()
     async.waterfall [((next) =>
         @autoTag(project, next)
       )
@@ -166,7 +170,7 @@ class Deploy
         else
           @records[project.name] = 'success'
           logger.info("Finish deploy [#{project.name}]")
-        @writeActionRecord()
+        @writeRecords()
         logger.info(sep2)
         callback(err, project)
 
