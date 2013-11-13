@@ -1,6 +1,6 @@
 {
   "name": "Sneaky",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Auto deployment with cake task, and be enjoy with git",
   "main": "lib/index.js",
   "scripts": {},
@@ -14,21 +14,24 @@
     "git",
     "ops"
   ],
-  "author": "teambition",
+  "author": "sailxjx",
   "license": "MIT",
   "devDependencies": {
-    "cake-dog": "~0.2.0"
+    "cake-dog": "~0.2.1",
+    "should": "~2.1.0",
+    "coffee-script": "~1.6.3",
+    "mocha": "~1.14.0",
+    "colors": "~0.6.2"
   },
   "dependencies": {
-    "colors": "~0.6.1",
     "async": "~0.2.9",
     "read": "~1.0.5",
     "moment": "~2.1.0",
     "mkdirp": "~0.3.5",
-    "js-yaml": "~2.1.0",
-    "underscore": "~1.5.1",
+    "underscore": "~1.5.2",
     "commander": "~2.0.0",
-    "graceful-logger": "~0.1.2",
-    "graceful-fs": "~2.0.1"
+    "graceful-logger": "~0.1.4",
+    "graceful-fs": "~2.0.1",
+    "ini": "~1.1.0"
   }
 }
