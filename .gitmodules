@@ -1,0 +1,6 @@
+[submodule "test/ini"]
+	path = test/ini
+	url = https://github.com/isaacs/ini
+[submodule "test/async"]
+	path = test/async
+	url = https://github.com/caolan/async
