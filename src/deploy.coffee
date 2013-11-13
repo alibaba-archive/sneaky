@@ -197,7 +197,6 @@ class Deploy
     gitCmd = "rm -rf #{path.join(@options.chdir, prefix)}; git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
       "--remote=#{project.source} --format=tar | tar -xf - -C #{@options.chdir}"
     execCmd gitCmd, (err, data) =>
-      process.chdir("#{@options.chdir}/#{prefix}")
       callback(err, project)
 
   rsync: (project, callback = ->) =>
@@ -219,6 +218,8 @@ class Deploy
   before: (project, callback = ->) =>
     if project.before? and typeof project.before is 'string'
       logger.info('Before hook:', project.before)
+      prefix = project.prefix or project.name + '/'
+      process.chdir("#{@options.chdir}/#{prefix}")
       spawnCmd project.before, (err, data) ->
         callback(err, project)
     else

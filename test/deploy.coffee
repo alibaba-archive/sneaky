@@ -36,9 +36,9 @@ describe 'command#deploy', ->
     @timeout(10000)
 
     it 'can be deployed more than once with the `-f` option', (done) ->
-      execCommand "#{sneaky} deploy -c #{config} -f core_ev", (err, stdout, stderr) ->
+      execCommand "#{sneaky} deploy -c #{config} -f async", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy [core_ev]') < 0
+        if stdout.indexOf('Finish deploy [async]') < 0
           return done('deploy error')
         done()
 
@@ -46,17 +46,17 @@ describe 'command#deploy', ->
     @timeout(10000)
 
     it 'will deploy two repositories in one action', (done) ->
-      execCommand "#{sneaky} deploy -c #{config} -f thorbuster core_ev", (err, stdout, stderr) ->
+      execCommand "#{sneaky} deploy -c #{config} -f async ini_a", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy [core_ev]') < 0 or
-           stdout.indexOf('Finish deploy [thorbuster]') < 0
+        if stdout.indexOf('Finish deploy [async]') < 0 or
+           stdout.indexOf('Finish deploy [ini_a]') < 0
           return done("deploy error")
         done()
 
   describe 'deploy:excludes', ->
     @timeout(10000)
     it 'will exclude [node_modules, tmp] in deployment', (done) ->
-      execCommand "#{sneaky} deploy -c #{config} -f thorbuster", (err, stdout, stderr) ->
+      execCommand "#{sneaky} deploy -c #{config} -f async", (err, stdout, stderr) ->
         return done(err) if err?
         if stdout.indexOf('--exclude=node_modules --exclude=tmp') < 0
           return done("deploy error")
@@ -65,9 +65,8 @@ describe 'command#deploy', ->
   describe 'deploy:hooks', ->
     @timeout(10000)
     it 'will run hooks before/after rsync', (done) ->
-      execCommand "#{sneaky} deploy -c #{configHook}", (err, stdout, stderr) ->
+      execCommand "#{sneaky} deploy -c #{configHook} -f", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('beforehook') < 0 or
-           stdout.indexOf('afterhook') < 0
+        if stdout.indexOf('LICENSE') < 0
           return done('deploy error')
         done()
