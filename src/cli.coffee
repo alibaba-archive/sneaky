@@ -2,7 +2,6 @@ commander = require('commander')
 _ = require('underscore')
 _p = require('../package')
 deploy = require('./deploy')
-init = require('./init')
 config = require('./config')
 
 cli = ->
@@ -12,8 +11,8 @@ cli = ->
   commander.command('deploy')
     .usage('[options] [projects]')
     .description('deploy local projects to servers')
-    .option('-f, --force', 'force deploy repository')
     .option('-c, --config <config>', 'user defined configure file')
+    .option('-f, --force', 'force deploy repository')
     .action ->
       options = _.last(arguments)
       _options =
@@ -22,15 +21,27 @@ cli = ->
         config: options.config or null
       deploy(_options)
 
-  commander.command('init')
-    .description('init configure file in ~/.sneakyrc')
-    .action ->
-      console.log 'comming soon'
+  configCommand = commander.command('config')
 
-  commander.command('config')
-    .description('add or update your configure file')
+  configCommand.command('show')
+    .description('show configure files')
+
+  configCommand.command('add')
+    .description('add configure')
+
+  configCommand.command('edit')
+    .description('edit configure')
+
+  configCommand.description('add or update your configure file')
+    .option('-c, --config <config>', 'user defined configure file')
     .action ->
-      console.log 'comming soon'
+      options = _.last(arguments)
+      action = _.first(arguments)
+      action = if typeof action is 'string' then action else null
+      _options =
+        action: action
+        configFile: options.config
+      config(_options)
 
   args = commander.parse(process.argv)
 

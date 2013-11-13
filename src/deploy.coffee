@@ -2,21 +2,15 @@ async = require('async')
 path = require('path')
 fs = require('graceful-fs')
 _ = require('underscore')
-ini = require('ini')
-logger = require('graceful-logger')
-{exec, spawn} = require('child_process')
 Moment = require('moment')
 mkdirp = require('mkdirp')
+logger = require('graceful-logger')
+{exec, spawn} = require('child_process')
+{expandPath, loadConfig} = require('./util')
 
 sep1 = '================================================================='
 
 sep2 = '-----------------------------------------------------------------'
-
-expandPath = (srcPath) ->
-  if matches = srcPath.match(/^~(.*)/)
-    return "#{process.env.HOME}#{matches[1]}"
-  else
-    return srcPath
 
 # define exec command
 execCmd = (cmd, callback = ->) ->
@@ -53,10 +47,6 @@ spawnCmd = (cmd, options, callback = ->) ->
     callback(code, stdout)
 # finish define spawn command
 
-expandToArray = (str) ->
-  if typeof str is 'string' and str.length > 0
-    return str.split(',').map (r) -> r.trim()
-  return []
 
 class Deploy
 
@@ -66,30 +56,6 @@ class Deploy
       force: false
       config: "#{process.env.HOME}/.sneakyrc"
     }, options)
-
-  loadConfigs: (callback = ->) ->
-    configFile = expandPath(@options.config or '~/.sneakyrc')
-    fs.readFile configFile, (err, content) =>
-      return callback(err, content) if err?
-      configs = ini.parse(content.toString())
-      _configs = {}
-      projectPrefix = 'project:'
-      for k, v of configs
-        if k.indexOf(projectPrefix) is 0
-          _configs.projects = {} unless _configs.projects?
-          _project = v
-          for kk, vv of _project
-            switch kk
-              when 'excludes', 'servers'
-                _project[kk] = expandToArray(vv)
-          _project.name = k[projectPrefix.length..].trim()
-          _configs['projects'][_project.name] = _project
-          continue
-        _configs[k] = v
-      if _.isEmpty(_configs.projects)
-        logger.err('please define the project info in the `projects` collection', 1)
-      @configs = _configs
-      callback(err, _configs)
 
   getServers: (project) =>
     servers = []
@@ -123,8 +89,11 @@ class Deploy
           return callback(err, result)
 
   run: (callback = ->) ->
-    @loadConfigs (err, configs) =>
+    loadConfig @options.config, (err, configs) =>
       return callback("Missing config file") unless configs?
+      if _.isEmpty(configs.projects)
+        logger.err('please define the project info in the `projects` collection', 1)
+      @configs = configs
       start = new Date()
       logger.info(sep1)
       logger.info('Job start at', start)
@@ -152,6 +121,7 @@ class Deploy
         callback(err, result)
 
   deploy: (project, callback = ->) =>
+    return callback(null) if project.name is 'template'
     logger.info(sep2)
     logger.info("Start deploy [#{project.name}]")
     if @records[project.name] in ['success', 'processing'] and not @options.force

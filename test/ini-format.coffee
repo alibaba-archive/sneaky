@@ -7,6 +7,6 @@ describe 'ini#parse', ->
       fs.readFile "#{__dirname}/config.ini", (err, content) ->
         return done(err) if err?
         configs = ini.parse(content.toString())
-        console.log ''
+        console.log 'use config file [config.ini]'
         console.log configs
         done()

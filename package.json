@@ -17,13 +17,13 @@
   "author": "sailxjx",
   "license": "MIT",
   "devDependencies": {
-    "cake-dog": "~0.2.0",
+    "cake-dog": "~0.2.1",
     "should": "~2.1.0",
     "coffee-script": "~1.6.3",
-    "mocha": "~1.14.0"
+    "mocha": "~1.14.0",
+    "colors": "~0.6.2"
   },
   "dependencies": {
-    "colors": "~0.6.2",
     "async": "~0.2.9",
     "read": "~1.0.5",
     "moment": "~2.1.0",
