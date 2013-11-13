@@ -16,7 +16,26 @@ Teambition 部署及检测系统
 ## ~/.sneakyrc.example
 
 ```ini
+user = jarvis
+servers = 192.168.0.1
 
+[project: template]
+name = template
+user = jarvis
+servers = 192.168.0.1
+source = test/ini
+version = HEAD
+destination = /tmp/ini
+excludes = node_modules, .git
+
+[project: async]
+name = async
+user = jarvis
+servers = 192.168.0.1
+source = test/async
+version = HEAD
+destination = /tmp/async
+excludes = node_modules, .git
 ```
 
 ## options
