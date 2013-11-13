@@ -173,7 +173,7 @@ class Config
       logger.warn('missing configure file')
 
   delete: (callback = ->) ->
-    {projects} = @configs?
+    projects = @configs?.projects
     if _.isEmpty(projects)
       err = 'no projects in configure file'
       logger.err(err)
@@ -197,7 +197,7 @@ class Config
           callback(err)
 
   edit: (callback = ->) ->
-    {projects} = @configs?
+    projects = @configs?.projects
     if _.isEmpty(projects)
       err = 'no projects in configure file'
       logger.err(err)
