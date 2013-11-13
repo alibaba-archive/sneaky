@@ -187,14 +187,16 @@ class Deploy
       return callback(err) if err?
       moment = new Moment()
       newTag = "#{project.tagPrefix or 'release'}-#{moment.format('YYYY.MM.DD.HHmmss')}"
-      tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
+      tagCmd = "git tag #{newTag} -m 'auto generated tag #{newTag} by sneaky " +
+        "at #{moment.format('YYYY-MM-DD HH:mm:ss')}'"
       execCmd tagCmd, (err, data) ->
         project.version = newTag
         callback(err, project)
 
   archive: (project, callback = ->) =>
     prefix = project.prefix or project.name + '/'
-    gitCmd = "rm -rf #{path.join(@options.chdir, prefix)}; git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
+    gitCmd = "rm -rf #{path.join(@options.chdir, prefix)}; " +
+      "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
       "--remote=#{project.source} --format=tar | tar -xf - -C #{@options.chdir}"
     execCmd gitCmd, (err, data) =>
       callback(err, project)
