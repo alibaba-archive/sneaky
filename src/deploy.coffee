@@ -165,6 +165,7 @@ class Deploy
 
   archive: (project, callback = ->) =>
     prefix = project.prefix or project.name + '/'
+    return callback('missing project source directory') unless project.source?
     gitCmd = "rm -rf #{path.join(@options.chdir, prefix)}; " +
       "git archive #{project.version or 'HEAD'} --prefix=#{prefix} " +
       "--remote=#{project.source} --format=tar | tar -xf - -C #{@options.chdir}"

@@ -30,13 +30,15 @@ class Config
       _addUser()
     else
       read
-        prompt: 'do you want to add a global user? default is root'
+        prompt: 'do you want to add a global user?'
         , (err, user) =>
           if user? and user.length > 3
             @configs.user = user
+            project.user = user
+            callback(err)
           else
             logger.warn('ignore global user')
-          _addUser()
+            _addUser()
 
   _stepServers: (project, callback = ->) ->
     _addServer = =>
@@ -57,9 +59,14 @@ class Config
         , (err, servers) =>
           if servers?
             @configs.servers = servers
+            project.servers = servers
+            callback(err)
           else
             logger.warn('ignore global servers')
-          _addServer()
+            _addServer()
+
+  _stepSource: (project, callback = ->) ->
+    @_extendDefault('source', project, null, false, callback)
 
   _stepVersion: (project, callback = ->) ->
     @_extendDefault('version', project, 'HEAD', false, callback)
@@ -209,6 +216,7 @@ class Config
         async.eachSeries [
           '_stepUser'
           '_stepServers'
+          '_stepSource'
           '_stepVersion'
           '_stepDest'
           '_stepExcludes'
@@ -243,6 +251,7 @@ class Config
         async.eachSeries [
           '_stepUser'
           '_stepServers'
+          '_stepSource'
           '_stepVersion'
           '_stepDest'
           '_stepExcludes'
