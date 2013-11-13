@@ -200,11 +200,16 @@ class Deploy
       callback(err, project)
 
   rsync: (project, callback = ->) =>
+    if project.local
+      @_localRsync(project, callback)
+    else
+      @_sshRsync(project, callback)
+
+  _sshRsync: (project, callback = ->) ->
     servers = @getServers(project)
     excludes = []
     if typeof project.excludes is 'object' and project.excludes.length > 0
-      excludes = project.excludes.map (item) =>
-        return "--exclude=#{item}"
+      excludes = project.excludes.map (item) -> "--exclude=#{item}"
     async.eachSeries servers, ((server, next) =>
       rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
         " -e \"ssh -p #{server[2]}\" " +
@@ -214,6 +219,15 @@ class Deploy
         next(err)
       ), (err, result) ->
       callback(err, project)
+
+  _localRsync: (project, callback = ->) ->
+    if typeof project.excludes is 'object' and project.excludes.length > 0
+      excludes = project.excludes.map (item) -> "--exclude=#{item}"
+      rsyncCmd = project.rsyncCmd or "rsync -a --timeout=15 --delete-after --ignore-errors --force" +
+        " " + excludes.join(' ') +
+        " #{@options.chdir}/#{project.name}/ #{project.destination}"
+      execCmd rsyncCmd, (err, data) ->
+        callback(err, project)
 
   before: (project, callback = ->) =>
     if project.before? and typeof project.before is 'string'
