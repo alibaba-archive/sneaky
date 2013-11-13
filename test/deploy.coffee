@@ -1,21 +1,73 @@
 should = require('should')
 path = require('path')
 {exec} = require('child_process')
+{execCommand} = require('./util')
 sneaky = path.join(__dirname, '../bin/sneaky')
-config = path.join(__dirname, 'config.ini')
+local = process.env.local or ''
+config = path.join(__dirname, "config#{local}.ini")
+configHook = path.join(__dirname, "config-hooks#{local}.ini")
 
 describe 'command#deploy', ->
-  describe 'deploy:allProjects', ->
-    @timeout(30000)
+
+  before (done) ->
+    exec 'rm -rf ~/.sneaky', (err) -> done(err)
+
+  describe 'deploy:allprojects', ->
+    @timeout(10000)
 
     it 'should deploy all projects from the config file', (done) ->
-      console.log ''
-      child = exec "#{sneaky} deploy -c #{config}", (err, stdout, stderr) ->
+      execCommand "#{sneaky} deploy -c #{config}", (err, stdout, stderr) ->
         return done(err) if err?
+        if stdout.indexOf('Finish deploy') < 0
+          return done('deploy error')
         done()
 
-      child.stdout.on 'data', (data) ->
-        process.stdout.write(data)
+  describe 'deploy:redeploy', ->
+    @timeout(10000)
 
-      child.stderr.on 'data', (data) ->
-        process.stdout.write(data)
+    it 'should not deploy without the `-f` option', (done) ->
+      execCommand "#{sneaky} deploy -c #{config}", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stderr.indexOf('skipping...') < 0
+          done('should not deploy twice!')
+        done()
+
+  describe 'deploy:force:deploy', ->
+    @timeout(10000)
+
+    it 'can be deployed more than once with the `-f` option', (done) ->
+      execCommand "#{sneaky} deploy -c #{config} -f core_ev", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('Finish deploy [core_ev]') < 0
+          return done('deploy error')
+        done()
+
+  describe 'deploy:chosen', ->
+    @timeout(10000)
+
+    it 'will deploy two repositories in one action', (done) ->
+      execCommand "#{sneaky} deploy -c #{config} -f thorbuster core_ev", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('Finish deploy [core_ev]') < 0 or
+           stdout.indexOf('Finish deploy [thorbuster]') < 0
+          return done("deploy error")
+        done()
+
+  describe 'deploy:excludes', ->
+    @timeout(10000)
+    it 'will exclude [node_modules, tmp] in deployment', (done) ->
+      execCommand "#{sneaky} deploy -c #{config} -f thorbuster", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('--exclude=node_modules --exclude=tmp') < 0
+          return done("deploy error")
+        done()
+
+  describe 'deploy:hooks', ->
+    @timeout(10000)
+    it 'will run hooks before/after rsync', (done) ->
+      execCommand "#{sneaky} deploy -c #{configHook}", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('beforehook') < 0 or
+           stdout.indexOf('afterhook') < 0
+          return done('deploy error')
+        done()

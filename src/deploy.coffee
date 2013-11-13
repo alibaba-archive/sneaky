@@ -53,6 +53,11 @@ spawnCmd = (cmd, options, callback = ->) ->
     callback(code, stdout)
 # finish define spawn command
 
+expandToArray = (str) ->
+  if typeof str is 'string' and str.length > 0
+    return str.split(',').map (r) -> r.trim()
+  return []
+
 class Deploy
 
   constructor: (options) ->
@@ -73,6 +78,10 @@ class Deploy
         if k.indexOf(projectPrefix) is 0
           _configs.projects = {} unless _configs.projects?
           _project = v
+          for kk, vv of _project
+            switch kk
+              when 'excludes', 'servers'
+                _project[kk] = expandToArray(vv)
           _project.name = k[projectPrefix.length..].trim()
           _configs['projects'][_project.name] = _project
           continue
@@ -84,16 +93,11 @@ class Deploy
 
   getServers: (project) =>
     servers = []
-    if typeof project.servers == 'string'
-      [server, user, port] = project.servers.split('|')
-      user = user or @configs.user or 'root'  # ssh user name
-      port = port or '22'  # ssh port
-      servers.push([server, user, port])
-    else if typeof project.servers == 'object'
+    if typeof project.servers is 'object'
       for i, item of project.servers
         [server, user, port] = item.split('|')
-        user = user or @configs.user or 'root'  # ssh user name
-        port = port or '22'  # ssh port
+        user = user or project.user or @configs.user or 'root' # ssh user name
+        port = port or '22' # ssh port
         servers.push([server, user, port])
     else if @configs.servers?
       return @getServers(@configs)
@@ -103,7 +107,7 @@ class Deploy
     moment = new Moment
     recordDir = path.join(@options.chdir, "_records")
     try
-      @records = require(recordDir, "#{moment.format('YYYYMMDD')}.json")
+      @records = require(path.join(recordDir, "#{moment.format('YYYYMMDD')}.json"))
     catch e
       @records = {}
     return @records
@@ -176,8 +180,8 @@ class Deploy
 
   autoTag: (project, callback = ->) =>
     return callback(null, project) unless project.autoTag
-    return callback("#{project.source} is not a local repos, " +
-      "you could not use `autoTag` for a remote repos.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
+    return callback("#{project.source} is not a local repository, " +
+      "you could not use `autoTag` for a remote repository.") unless project.source.match(/^[a-zA-Z._\/\~\-]+$/)
     process.chdir(expandPath(project.source))
     execCmd 'git tag', (err, data) =>
       return callback(err) if err?
@@ -199,7 +203,7 @@ class Deploy
   rsync: (project, callback = ->) =>
     servers = @getServers(project)
     excludes = []
-    if typeof project.excludes == 'object' and project.excludes.length > 0
+    if typeof project.excludes is 'object' and project.excludes.length > 0
       excludes = project.excludes.map (item) =>
         return "--exclude=#{item}"
     async.eachSeries servers, ((server, next) =>
@@ -213,7 +217,7 @@ class Deploy
       callback(err, project)
 
   before: (project, callback = ->) =>
-    if project.before? and typeof project.before == 'string'
+    if project.before? and typeof project.before is 'string'
       logger.info('Before hook:', project.before)
       spawnCmd project.before, (err, data) ->
         callback(err, project)
@@ -223,7 +227,7 @@ class Deploy
   after: (project, callback = ->) =>
     servers = @getServers(project)
     prefix = project.prefix or project.name + '/'
-    if project.after? and typeof project.after == 'string'
+    if project.after? and typeof project.after is 'string'
       logger.info('After hook:')
       async.eachSeries servers, ((server, next) ->
         sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""

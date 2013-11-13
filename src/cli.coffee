@@ -32,6 +32,8 @@ cli = ->
     .action ->
       console.log 'comming soon'
 
-  commander.parse(process.argv)
+  args = commander.parse(process.argv)
+
+  commander.help() if process.argv.length < 3
 
 module.exports = cli
