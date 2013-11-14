@@ -16,6 +16,9 @@
     "git",
     "ops"
   ],
+  "bin": {
+    "sneaky": "./bin/sneaky"
+  },
   "author": "sailxjx",
   "license": "MIT",
   "devDependencies": {
