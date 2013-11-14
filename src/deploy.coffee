@@ -217,13 +217,18 @@ class Deploy
     prefix = project.prefix or project.name + '/'
     if project.after? and typeof project.after is 'string'
       logger.info('After hook:')
-      async.eachSeries servers, ((server, next) ->
-        sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
-        logger.info(sshCmd)
-        spawnCmd sshCmd, (err, data) ->
-          next(err)
-        ), (err, result) ->
-        callback(err, project)
+      if project.local
+        logger.info project.after
+        spawnCmd project.after, (err, data) ->
+          callback(err, project)
+      else
+        async.eachSeries servers, ((server, next) ->
+          sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
+          logger.info(sshCmd)
+          spawnCmd sshCmd, (err, data) ->
+            next(err)
+          ), (err, result) ->
+          callback(err, project)
     else
       callback(null, project)
 
