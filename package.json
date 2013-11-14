@@ -1,7 +1,7 @@
 {
   "name": "sneaky",
   "version": "0.2.3",
-  "description": "Auto deployment with cake task, and be enjoy with git",
+  "description": "Deployment Genius",
   "main": "lib/index.js",
   "scripts": {
     "test": "make test"
