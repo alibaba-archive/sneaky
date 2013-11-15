@@ -1,6 +1,6 @@
 {
   "name": "sneaky",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Deployment Genius",
   "main": "lib/index.js",
   "scripts": {
