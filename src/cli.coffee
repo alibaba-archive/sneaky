@@ -1,11 +1,11 @@
 commander = require('commander')
 _ = require('underscore')
-_p = require('../package')
+pkg = require('../package')
 deploy = require('./deploy')
 config = require('./config')
 
 cli = ->
-  commander.version(_p.version)
+  commander.version(pkg.version)
     .usage('<command> [options] [projects]')
 
   commander.command('deploy')
