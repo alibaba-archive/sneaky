@@ -5,7 +5,7 @@ _ = require('underscore')
 Moment = require('moment')
 mkdirp = require('mkdirp')
 logger = require('graceful-logger')
-{exec, spawn} = require('child_process')
+{exec} = require('child_process')
 {expandPath, loadConfig} = require('./util')
 
 sep1 = '================================================================='
@@ -15,38 +15,10 @@ sep2 = '-----------------------------------------------------------------'
 # define exec command
 execCmd = (cmd, callback = ->) ->
   logger.info("Run command: [#{cmd}]")
-  exec cmd, (err, data) ->
-    logger.info(data.toString())
-    callback(err, data)
+  child = exec(cmd, callback)
+  child.stdout.on 'data', (data) -> logger.info(data.toString().trim())
+  child.stderr.on 'data', (data) -> logger.err(data.toString().trim())
 # finish define exec command
-
-# define spawn command
-spawnCmd = (cmd, options, callback = ->) ->
-  if arguments.length < 3
-    callback = options or ->
-  isQuiet = options.quiet or false
-
-  stdout = ''
-  stderr = ''
-  job = spawn('bash', ['-c', cmd])
-
-  job.stdout.setEncoding('utf-8')
-  job.stdout.on 'data', (data) ->
-    data = data.trim()
-    stdout += data
-    logger.info(data)
-
-  job.stderr.setEncoding('utf-8')
-  job.stderr.on 'data', (data) ->
-    data = data.trim()
-    stderr += data
-    logger.warn(data)
-
-  job.on 'close', (code) ->
-    return callback(stderr) if code != 0
-    callback(code, stdout)
-# finish define spawn command
-
 
 class Deploy
 
@@ -207,7 +179,7 @@ class Deploy
       logger.info('Before hook:', project.before)
       prefix = project.prefix or project.name + '/'
       process.chdir("#{@options.chdir}/#{prefix}")
-      spawnCmd project.before, (err, data) ->
+      execCmd project.before, (err, data) ->
         callback(err, project)
     else
       callback(null, project)
@@ -219,13 +191,13 @@ class Deploy
       logger.info('After hook:')
       if project.local
         logger.info project.after
-        spawnCmd project.after, (err, data) ->
+        execCmd project.after, (err, data) ->
           callback(err, project)
       else
         async.eachSeries servers, ((server, next) ->
           sshCmd = "ssh -t -t #{server[1]}@#{server[0]} -p #{server[2]} \"#{project.after}\""
           logger.info(sshCmd)
-          spawnCmd sshCmd, (err, data) ->
+          execCmd sshCmd, (err, data) ->
             next(err)
           ), (err, result) ->
           callback(err, project)
