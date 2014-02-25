@@ -11,12 +11,10 @@ cli = ->
   _deployCommand = (cmd) ->
     cmd.usage('[options] [projects]')
       .option('-c, --config <config>', 'user defined configure file')
-      .option('-f, --force', 'force deploy repository')
       .action ->
         options = _.last(arguments)
         _options =
           projects: _.first(arguments, arguments.length - 1)
-          force: options.force or false
           config: options.config or null
         deploy(_options)
 

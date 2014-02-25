@@ -25,7 +25,7 @@ class Deploy
   constructor: (options) ->
     @options = _.extend({
       chdir: "#{process.env.HOME}/.sneaky"
-      force: false
+      force: true
       config: "#{process.env.HOME}/.sneakyrc"
     }, options)
 
