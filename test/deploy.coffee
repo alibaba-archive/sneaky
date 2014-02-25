@@ -6,6 +6,7 @@ sneaky = path.join(__dirname, '../bin/sneaky')
 local = process.env.local or ''
 config = path.join(__dirname, "config#{local}.ini")
 configHook = path.join(__dirname, "config-hooks#{local}.ini")
+fs = require('fs')
 
 describe 'command#deploy', ->
 
@@ -46,3 +47,12 @@ describe 'command#deploy', ->
         if stdout.indexOf('LICENSE') < 0
           return done('deploy error')
         done()
+
+  describe 'deploy:local', ->
+    it 'will deploy with local configure file', (done) ->
+      process.chdir(path.join(__dirname, './ini'))
+      execCommand "cp ../config-ini.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('Finish deploy [ini_a]') < 0
+          return done('deploy error')
+        fs.unlink('./.sneakyrc', done)

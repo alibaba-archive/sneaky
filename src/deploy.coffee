@@ -28,6 +28,7 @@ class Deploy
       force: true
       config: "#{process.env.HOME}/.sneakyrc"
     }, options)
+    @options.config or= path.join(path.resolve('./.sneakyrc'))
 
   getServers: (project) =>
     servers = []
