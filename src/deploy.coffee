@@ -28,7 +28,6 @@ class Deploy
       force: true
       config: "#{process.env.HOME}/.sneakyrc"
     }, options)
-    @options.config or= path.join(path.resolve('./.sneakyrc'))
 
   getServers: (project) =>
     servers = []
@@ -81,6 +80,7 @@ class Deploy
             logger.warn("Can not find project [#{projectName}]")
       else
         runProjects = (v for k, v of configs.projects)
+
       async.eachSeries runProjects, @deploy, (err, result) ->
         if err?
           logger.err(err.toString())
