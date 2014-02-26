@@ -9,7 +9,7 @@ path = require('path')
 class Config
 
   constructor: (@options) ->
-    @configFile = options.configFile or "#{process.env.HOME}/.sneakyrc"
+    @configFile = options.configFile
 
   _readConfigs: (configFile, callback = ->) ->
     loadConfig configFile, false, (err, configs) =>
