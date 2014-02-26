@@ -25,7 +25,7 @@ class Deploy
   constructor: (options) ->
     @options = _.extend({
       chdir: "#{process.env.HOME}/.sneaky"
-      force: false
+      force: true
       config: "#{process.env.HOME}/.sneakyrc"
     }, options)
 
@@ -80,6 +80,7 @@ class Deploy
             logger.warn("Can not find project [#{projectName}]")
       else
         runProjects = (v for k, v of configs.projects)
+
       async.eachSeries runProjects, @deploy, (err, result) ->
         if err?
           logger.err(err.toString())

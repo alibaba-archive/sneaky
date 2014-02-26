@@ -59,3 +59,19 @@ Configure sneaky
 ```
 $ sneaky config
 ```
+
+## Use Local Configure File
+
+Put .sneakyrc in your repository
+
+And enter your repository directory
+
+Typein `sneaky d`
+
+Or `sneaky d [project]`
+
+Will deploy with your local configure file
+
+## LICENSE
+MIT
+
