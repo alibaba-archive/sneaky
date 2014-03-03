@@ -74,7 +74,7 @@ util =
 
       _filterProp = (prop, val) ->
         switch prop
-          when 'excludes', 'servers'
+          when 'excludes', 'servers', 'destinations', 'ports'
             return val.join(',')
           else
             return val

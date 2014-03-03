@@ -16,55 +16,6 @@ class Config
       @configs = configs
       callback(err, configs)
 
-  _stepUser: (project, callback = ->) ->
-    _addUser = =>
-      options =
-        prompt: "do you want a specific user for #{project.name}?"
-      user = project.user or @configs.user
-      options.default = user if user?
-      read options, (err, user) ->
-        project.user = user if user? and user.length > 3
-        callback(err)
-
-    if @configs.user?
-      _addUser()
-    else
-      read
-        prompt: 'do you want to add a global user?'
-        , (err, user) =>
-          if user? and user.length > 3
-            @configs.user = user
-            project.user = user
-            callback(err)
-          else
-            logger.warn('ignore global user')
-            _addUser()
-
-  _stepServers: (project, callback = ->) ->
-    _addServer = =>
-      options =
-        prompt: "do you want specific servers for #{project.name}?"
-      defaultServers = project.servers or @configs.servers
-      options.default = defaultServers if defaultServers?
-      read options, (err, servers) ->
-        servers = servers or defaultServers
-        project.servers = servers if servers?
-        callback(err)
-
-    if @configs.servers?
-      _addServer()
-    else
-      read
-        prompt: 'do you want to add global servers?'
-        , (err, servers) =>
-          if servers?
-            @configs.servers = servers
-            project.servers = servers
-            callback(err)
-          else
-            logger.warn('ignore global servers')
-            _addServer()
-
   _stepSource: (project, callback = ->) ->
     @_extendDefault('source', project, null, false, callback)
 
@@ -72,19 +23,19 @@ class Config
     @_extendDefault('version', project, 'HEAD', false, callback)
 
   _stepDest: (project, callback = ->) ->
-    destination = project['destination'] or null
-    unless destination?
+    destinations = project['destinations'] or null
+    unless destinations?
       projects = @configs.projects
       if projects?
         for k, _project of projects
-          if _project['destination']?
-            destination = path.join(path.dirname(_project['destination']), project.name)
+          if _project.destinations?
+            destinations = path.join(path.dirname(_project.destinations.split(',')[0]), project.name)
             break
     options =
       prompt: "do you want specific destination for #{project.name}?"
-    options.default = destination if destination?
-    read options, (err, destination) ->
-      project.destination = destination if destination?
+    options.default = destinations if destinations
+    read options, (err, destinations) ->
+      project.destinations = destinations if destinations?
       callback(err)
 
   _stepExcludes: (project, callback = ->) ->
@@ -214,8 +165,6 @@ class Config
           return callback(err)
         project = projects[projectName]
         async.eachSeries [
-          '_stepUser'
-          '_stepServers'
           '_stepSource'
           '_stepVersion'
           '_stepDest'
@@ -249,8 +198,6 @@ class Config
         project =
           name: projectName
         async.eachSeries [
-          '_stepUser'
-          '_stepServers'
           '_stepSource'
           '_stepVersion'
           '_stepDest'

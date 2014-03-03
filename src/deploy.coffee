@@ -37,7 +37,7 @@ deploy = (options) ->
           if allProjects[name]?
             runProjects.push(allProjects[name])
           else
-            return next(new Error("can not find project: #{projects}"))
+            return next(new Error("can not find project: #{name}"))
       else
         runProjects = (v for k, v of config.projects when k isnt 'template')
       next(null, runProjects)
