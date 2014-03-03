@@ -2,8 +2,7 @@ path = require('path')
 should = require('should')
 {execCommand} = require('./util')
 sneaky = path.join(__dirname, '../bin/sneaky')
-local = process.env.local or ''
-config = path.join(__dirname, "config#{local}.ini")
+config = path.join(__dirname, 'configs', "config.ini")
 
 describe 'command#config', ->
 

@@ -3,8 +3,8 @@ path = require('path')
 {exec} = require('child_process')
 {execCommand} = require('./util')
 sneaky = path.join(__dirname, '../bin/sneaky')
-config = path.join(__dirname, "config.ini")
-configHook = path.join(__dirname, "config-hooks.ini")
+config = path.join(__dirname, 'configs', "config.ini")
+configHook = path.join(__dirname, 'configs', "config-hooks.ini")
 fs = require('fs')
 
 describe 'command#deploy', ->
@@ -47,10 +47,23 @@ describe 'command#deploy', ->
           return done('deploy error')
         done()
 
-  describe 'deploy:local', ->
-    it 'will deploy with local configure file', (done) ->
+  describe 'deploy:repos', ->
+    it 'will deploy with repos configure file', (done) ->
       process.chdir(path.join(__dirname, './ini'))
-      execCommand "cp ../config-ini.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
+      execCommand "cp ../configs/config-ini.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('Finish deploy [ini_a]') < 0
+          return done('deploy error')
+        fs.unlink('./.sneakyrc', done)
+
+  # describe 'deploy:remotePath', ->
+  #   it 'will deploy with remote path', (done) ->
+  #     done()
+
+  describe 'deploy:withoutsource', ->
+    it 'will deploy without path', (done) ->
+      process.chdir(path.join(__dirname, './ini'))
+      execCommand "cp ../configs/config-ini-withoutsource.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
         return done(err) if err?
         if stdout.indexOf('Finish deploy [ini_a]') < 0
           return done('deploy error')
