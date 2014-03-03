@@ -3,9 +3,8 @@ path = require('path')
 {exec} = require('child_process')
 {execCommand} = require('./util')
 sneaky = path.join(__dirname, '../bin/sneaky')
-local = process.env.local or ''
-config = path.join(__dirname, "config#{local}.ini")
-configHook = path.join(__dirname, "config-hooks#{local}.ini")
+config = path.join(__dirname, "config.ini")
+configHook = path.join(__dirname, "config-hooks.ini")
 fs = require('fs')
 
 describe 'command#deploy', ->
