@@ -1,0 +1,6 @@
+[project: sneaky]
+version = HEAD
+destinations = /tmp/sneaky, /tmp/sneaky1
+excludes = .git, node_modules
+before = npm i
+after = "cd /tmp/sneaky; ls"

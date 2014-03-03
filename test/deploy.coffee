@@ -18,7 +18,7 @@ describe 'command#deploy', ->
     it 'should deploy all projects from the config file', (done) ->
       execCommand "#{sneaky} deploy -c #{config}", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy') < 0
+        if stdout.indexOf('deploy finished') < 0
           return done('deploy error')
         done()
 
@@ -26,8 +26,8 @@ describe 'command#deploy', ->
     it 'will deploy two repositories in one action', (done) ->
       execCommand "#{sneaky} deploy -c #{config} async ini_a", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy [async]') < 0 or
-           stdout.indexOf('Finish deploy [ini_a]') < 0
+        if stdout.indexOf('start deploy: async') < 0 or
+           stdout.indexOf('start deploy: ini_a') < 0
           return done("deploy error")
         done()
 
@@ -52,19 +52,23 @@ describe 'command#deploy', ->
       process.chdir(path.join(__dirname, './ini'))
       execCommand "cp ../configs/config-ini.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy [ini_a]') < 0
+        if stdout.indexOf('start deploy: ini_a') < 0
           return done('deploy error')
         fs.unlink('./.sneakyrc', done)
-
-  # describe 'deploy:remotePath', ->
-  #   it 'will deploy with remote path', (done) ->
-  #     done()
 
   describe 'deploy:withoutsource', ->
     it 'will deploy without path', (done) ->
       process.chdir(path.join(__dirname, './ini'))
       execCommand "cp ../configs/config-ini-withoutsource.ini ./.sneakyrc && #{sneaky} deploy", (err, stdout, stderr) ->
         return done(err) if err?
-        if stdout.indexOf('Finish deploy [ini_a]') < 0
+        if stdout.indexOf('start deploy: ini_a') < 0
           return done('deploy error')
         fs.unlink('./.sneakyrc', done)
+
+  # describe 'deploy:remotePath', ->
+  #   it 'will deploy with remote path', (done) ->
+  #     execCommand "#{sneaky} -c #{path.join(__dirname, './configs/config-ini-remote.ini')} deploy", (err, stdout, stderr) ->
+  #       return done(err) if err?
+  #       if stdout.indexOf('finish deploy [sneaky]') < 0
+  #         return done('deploy error')
+  #       done()
