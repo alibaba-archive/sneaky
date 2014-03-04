@@ -5,7 +5,7 @@ Teambition 部署及检测系统
 
 [![build status](https://api.travis-ci.org/sailxjx/sneaky.png)](https://travis-ci.org/sailxjx/sneaky)
 
-## feature
+## Feature
 
 * configuate with ini (~/.sneakyrc)
 * archive with git
@@ -14,7 +14,9 @@ Teambition 部署及检测系统
 * local pre-hook (before rsync)
 * remote post-hook (after rsync)
 
-## ~/.sneakyrc.example
+## Example
+
+~/.sneakyrc file
 
 ```ini
 [project: template]
@@ -28,38 +30,42 @@ destinations = /tmp/async
 excludes = node_modules, .git
 ```
 
-## options
-
-
-## example
-
-Deploy all projects defined in configure file
+deploy all projects defined in configure file
 ```
 $ sneaky deploy
 ```
 
-Deploy chosen projects
+deploy chosen projects
 ```
 $ sneaky deploy async
 ```
 
-Configure sneaky
+configure sneaky
 ```
 $ sneaky config
 ```
 
 ## Use Local Configure File
 
-Put .sneakyrc in your repository
+put .sneakyrc in your repository
 
-And enter your repository directory
+and enter your repository directory
 
-Typein `sneaky d`
+typein `sneaky d`
 
-Or `sneaky d [project]`
+or `sneaky d [project]`
 
-Will deploy with your local configure file
+will deploy with your local configure file
+
+## Change Log
+
+###v0.4.2
+1. remove `servers`,`user`,`autoTag` configuration fields, rename `destination` to `destinations`
+2. destinations can use the ssh path `user@server:/path/to/directory` or local path `/path/to/directory`
+3. support deploy from remote git repositories, e.g. `source = https://github.com/sailxjx/sneaky`
+
+###v0.3.0
+1. support use `.sneakyrc` file in current pwd
 
 ## LICENSE
 MIT
-
