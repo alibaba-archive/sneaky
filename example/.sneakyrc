@@ -2,5 +2,11 @@
 version = HEAD
 destinations = /tmp/sneaky, /tmp/sneaky1
 excludes = .git, node_modules
-before = npm i
+before = npm i --production
 after = "cd /tmp/sneaky; ls"
+
+[project: sneaky-remote]
+source = http://github.com/sailxjx/sneaky
+destinations = /tmp/sneaky2
+before = npm i --production
+after = "cd /tmp/sneaky2; ls"

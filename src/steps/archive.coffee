@@ -1,12 +1,23 @@
+async = require('async')
 path = require('path')
 {execCmd} = require('../util')
 
 module.exports = (project, options, callback = ->) ->
   prefix = project.name + '/'
   project.source or= process.cwd()
-  cmd = """
-    rm -rf #{path.join(options.chdir, prefix)}; \\
-    git archive #{project.version or 'HEAD'} --prefix=#{prefix} \\
-    --remote=#{project.source} --format=tar | tar -xf - -C #{options.chdir}
-  """
+
+  if project.source.match(/^(http|git|ssh)/)  # remote repositories
+    remote = path.join(options.chdir, '.repos-' + project.name)
+    cmd = """
+      rm -rf #{path.join(options.chdir, prefix)} #{remote}; \\
+      git clone #{project.source} #{remote}; \\
+      git archive #{project.version or 'HEAD'} --prefix=#{prefix} \\
+      --remote=#{remote} --format=tar | tar -xf - -C #{options.chdir}
+    """
+  else  # local repositories
+    cmd = """
+      rm -rf #{path.join(options.chdir, prefix)}; \\
+      git archive #{project.version or 'HEAD'} --prefix=#{prefix} \\
+      --remote=#{project.source} --format=tar | tar -xf - -C #{options.chdir}
+    """
   execCmd(cmd, callback)

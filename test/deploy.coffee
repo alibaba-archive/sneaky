@@ -65,10 +65,10 @@ describe 'command#deploy', ->
           return done('deploy error')
         fs.unlink('./.sneakyrc', done)
 
-  # describe 'deploy:remotePath', ->
-  #   it 'will deploy with remote path', (done) ->
-  #     execCommand "#{sneaky} -c #{path.join(__dirname, './configs/config-ini-remote.ini')} deploy", (err, stdout, stderr) ->
-  #       return done(err) if err?
-  #       if stdout.indexOf('finish deploy [sneaky]') < 0
-  #         return done('deploy error')
-  #       done()
+  describe 'deploy:remotePath', ->
+    it 'will deploy with remote path', (done) ->
+      execCommand "#{sneaky} -c #{path.join(__dirname, './configs/config-ini-remote.ini')} deploy", (err, stdout, stderr) ->
+        return done(err) if err?
+        if stdout.indexOf('deploy finished') < 0
+          return done('deploy error')
+        done()
