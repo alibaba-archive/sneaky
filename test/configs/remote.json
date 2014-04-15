@@ -1,0 +1,11 @@
+{
+  "sneaky": {
+    "source": "https://github.com/teambition/Sneaky",
+    "destinations": [
+      "/tmp/ini_a"
+    ],
+    "excludes": [
+      "node_modules"
+    ]
+  }
+}

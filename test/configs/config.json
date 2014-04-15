@@ -1,0 +1,30 @@
+{
+  "async": {
+    "source": "test/async",
+    "destinations": [
+      "/tmp/async"
+    ],
+    "excludes": [
+      "node_modules",
+      "tmp"
+    ]
+  },
+  "ini_a": {
+    "source": "test/ini",
+    "destinations": [
+      "/tmp/ini_a"
+    ],
+    "excludes": [
+      "node_modules"
+    ]
+  },
+  "ini_b": {
+    "source": "test/ini",
+    "destinations": [
+      "/tmp/ini_b"
+    ],
+    "excludes": [
+      "node_modules"
+    ]
+  }
+}

@@ -18,29 +18,20 @@ deploy = (options) ->
 
   async.waterfall [
 
-    (next) ->
-      fs.exists _options.chdir, (exists) ->
-        if exists then next() else
-          mkdirp _options.chdir, (err) ->
-            next(err)
+    (next) -> fs.exists _options.chdir, (exists) ->
+      if exists then next() else mkdirp _options.chdir, (err) -> next(err)
 
     (next) -> loadConfig(_options.config, next)
 
-    (config, next) ->
-      return next(new Error("missing config file")) unless config?
-      if _.isEmpty(config.projects)
-        return next(new Error("no projects found in the configuration file"))
-      allProjects = config.projects
-      runProjects = []
+    (configs, next) ->
+      return next(new Error("empty config")) if _.isEmpty(configs)
       if _options.projects?.length > 0
-        for i, name of _options.projects
-          if allProjects[name]?
-            runProjects.push(allProjects[name])
-          else
-            return next(new Error("can not find project: #{name}"))
+        projects = _.pick(configs, _options.projects)
       else
-        runProjects = (v for k, v of config.projects when k isnt 'template')
-      next(null, runProjects)
+        projects = configs
+      projects = (v for k, v of projects when k isnt 'template')
+      return next(new Error('no project selected')) if _.isEmpty(projects)
+      next(null, projects)
 
     (projects, next) ->
 

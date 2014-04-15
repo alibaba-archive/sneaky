@@ -39,7 +39,40 @@ util =
         else
           return callback(null, util.expandPath('~/.sneakyrc'))
 
-  loadConfig: (file, expand = true, callback = ->) ->
+  loadConfig: (file, callback = ->) ->
+    args = arguments
+    async.waterfall [
+      (next) ->
+        util.getConfigPath(file, next)
+      (file, next) ->
+        fs.readFile(file, next)
+      (content, next) ->
+        try
+          configs = JSON.parse(content)
+          next(null, configs)
+        catch e
+          logger.warn """
+            #{file} is not a valid json file
+            ini-format configure file is deprecated
+            and will be removed in the next version.
+          """
+          util._loadConfigFromIni file, true, (err, configs) ->
+            next(err, configs?.projects or {})
+      (configs, next) ->
+        for k, config of configs
+          config.name or= path.basename(process.cwd()) + "-#{k}"
+        next(null, configs)
+    ], callback
+
+  initojson: (file, callback = ->) ->
+    @_loadConfigFromIni file, true, (err, configs) ->
+      configs = configs.projects
+      for k, config of configs
+        delete config.name if config.name
+      fs.writeFile(file, JSON.stringify(configs, null, 2), callback)
+
+  # Remote this function in version 0.6
+  _loadConfigFromIni: (file, expand = true, callback = ->) ->
 
     if typeof arguments[1] is 'function'
       callback = arguments[1]
