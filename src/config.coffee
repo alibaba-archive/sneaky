@@ -12,40 +12,31 @@ class Config
     @configFile = options.configFile
 
   _readConfigs: (configFile, callback = ->) ->
-    loadConfig configFile, false, (err, configs) =>
+    loadConfig configFile, (err, configs) =>
       @configs = configs
       callback(err, configs)
 
   _stepSource: (project, callback = ->) ->
-    @_extendDefault('source', project, null, false, callback)
+    @_extendDefault('source', project, null, callback)
 
   _stepVersion: (project, callback = ->) ->
-    @_extendDefault('version', project, 'HEAD', false, callback)
+    @_extendDefault('version', project, 'HEAD', callback)
 
   _stepDest: (project, callback = ->) ->
-    destinations = project['destinations'] or null
-    unless destinations?
-      projects = @configs.projects
-      if projects?
-        for k, _project of projects
-          if _project.destinations?
-            destinations = path.join(path.dirname(_project.destinations.split(',')[0]), project.name)
-            break
-    options =
-      prompt: "do you want specific destination for #{project.name}?"
-    options.default = destinations if destinations
-    read options, (err, destinations) ->
-      project.destinations = destinations if destinations?
+    @_extendDefault 'destinations', project, null, (err, destinations) ->
+      project.destinations = destinations.split(',').map (item) -> item.trim() if destinations?
       callback(err)
 
   _stepExcludes: (project, callback = ->) ->
-    @_extendDefault('excludes', project, 'node_modules, .git', true, callback)
+    @_extendDefault 'excludes', project, 'node_modules, .git', (err, excludes) ->
+      project.excludes = excludes.split(',').map (item) -> item.trim() if excludes?
+      callback(err)
 
   _stepBefore: (project, callback = ->) ->
-    @_extendDefault('before', project, null, false, callback)
+    @_extendDefault('before', project, null, callback)
 
   _stepAfter: (project, callback = ->) ->
-    @_extendDefault('after', project, null, false, callback)
+    @_extendDefault('after', project, null, callback)
 
   ###
   # @prop property name
@@ -54,24 +45,14 @@ class Config
   # @isExtend use extension
   # @callback callback
   ###
-  _extendDefault: (prop, project, defaultValue = null, isExtend = true, callback = ->) ->
-    exDefault = project[prop] or null
-    unless exDefault? or not isExtend
-      projects = @configs.projects
-      if projects?
-        for k, _project of projects
-          if _project[prop]?
-            exDefault = _project[prop]
-            break
-    unless exDefault?
-      exDefault = defaultValue
+  _extendDefault: (prop, project, defaultValue = null, callback = ->) ->
     options =
       prompt: "do you want specific #{prop} for #{project.name}?"
-    options.default = exDefault if exDefault?
+    options.default = defaultValue if defaultValue?
     read options, (err, result) ->
-      result = result or exDefault
+      result = result or defaultValue
       project[prop] = result if result?
-      callback(err)
+      callback(err, result)
 
   _saveTemplate: (project, callback = ->) ->
     projects = @configs.projects
@@ -80,9 +61,7 @@ class Config
       default: 'y'
       , (err, result) =>
         if result.toLowerCase() in ['y', 'yes']
-          template = _.clone(project)
-          template.name = 'template'
-          @configs.projects['template'] = template
+          @configs['template'] = _.clone(project)
           saveConfig @configFile, @configs, (err) ->
             if err?
               logger.err(err)
@@ -92,7 +71,7 @@ class Config
 
   _saveProject: (project, callback = ->) ->
     console.log project
-    @configs['projects'][project.name] = project
+    @configs[project.name] = project
     read
       prompt: 'look nice? Y/n'
       default: 'y'
@@ -124,7 +103,7 @@ class Config
       logger.warn('missing configure file')
 
   delete: (callback = ->) ->
-    projects = @configs?.projects
+    projects = @configs
     if _.isEmpty(projects)
       err = 'no projects in configure file'
       logger.err(err)
@@ -139,7 +118,7 @@ class Config
           err = 'please chose a project!'
           logger.err(err)
           return callback(err)
-        delete @configs['projects'][projectName]
+        delete @configs[projectName]
         saveConfig @configFile, @configs, (err) ->
           if err
             logger.err(err)
@@ -148,7 +127,7 @@ class Config
           callback(err)
 
   edit: (callback = ->) ->
-    projects = @configs?.projects
+    projects = @configs
     if _.isEmpty(projects)
       err = 'no projects in configure file'
       logger.err(err)
@@ -181,8 +160,7 @@ class Config
 
   add: (callback = ->) ->
     @configs = {} unless @configs
-    @configs.projects = {} unless @configs.projects?
-    {projects} = @configs
+    projects = @configs
     read
       prompt: 'please enter your project name:'
       , (err, projectName) =>

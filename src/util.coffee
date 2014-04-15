@@ -102,26 +102,7 @@ util =
         callback(err, _configs)
 
   saveConfig: (file, configs, callback = ->) ->
-    util.getConfigPath file, (err, configFile) =>
-      _configs = {}
-
-      _filterProp = (prop, val) ->
-        switch prop
-          when 'excludes', 'servers', 'destinations', 'ports'
-            return val.join(',')
-          else
-            return val
-
-      for k, v of configs
-        if k is 'projects'
-          if v.template?
-            _configs["#{projectPrefix} template"] = v.template
-            delete v.template
-          for kk, project of v
-            _configs["#{projectPrefix} #{project.name}"] = project
-        else
-          _configs[k] = v
-
-      fs.writeFile(configFile, ini.stringify(_configs), callback)
+    util.getConfigPath file, (err, configFile) ->
+      fs.writeFile(configFile, JSON.stringify(configs, null, 2), callback)
 
 module.exports = util
