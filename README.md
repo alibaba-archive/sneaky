@@ -18,7 +18,7 @@ Teambition 部署及检测系统
 
 ~/.sneakyrc file
 
-```ini
+```json
 {
   "sneaky": {
     "name": "sneaky",
