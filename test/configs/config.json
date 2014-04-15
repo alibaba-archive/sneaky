@@ -1,5 +1,6 @@
 {
   "async": {
+    "name": "async",
     "source": "test/async",
     "destinations": [
       "/tmp/async"
@@ -10,6 +11,7 @@
     ]
   },
   "ini_a": {
+    "name": "ini_a",
     "source": "test/ini",
     "destinations": [
       "/tmp/ini_a"
@@ -19,6 +21,7 @@
     ]
   },
   "ini_b": {
+    "name": "ini_b",
     "source": "test/ini",
     "destinations": [
       "/tmp/ini_b"

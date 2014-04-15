@@ -1,0 +1,17 @@
+{
+  "async": {
+    "source": "test/async",
+    "destinations": [
+      "/tmp/async"
+    ],
+    "excludes": [
+      "node_modules",
+      "tmp",
+      "*"
+    ],
+    "includes": [
+      "lib/",
+      "test/"
+    ]
+  }
+}

@@ -7,6 +7,7 @@ module.exports = (project, options, callback = ->) ->
   project.source or= process.cwd()
 
   if project.source.match(/^(http|git|ssh)/)  # remote repositories
+    project.nochdir = false  # Force change directory on remote repositories
     remote = path.join(options.chdir, '.repos-' + project.name)
     cmd = """
       rm -rf #{path.join(options.chdir, prefix)} #{remote}; \\
@@ -15,6 +16,7 @@ module.exports = (project, options, callback = ->) ->
       --remote=#{remote} --format=tar | tar -xf - -C #{options.chdir}
     """
   else  # local repositories
+    return callback() if project.nochdir
     cmd = """
       rm -rf #{path.join(options.chdir, prefix)}; \\
       git archive #{project.version or 'HEAD'} --prefix=#{prefix} \\
