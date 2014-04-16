@@ -1,5 +1,6 @@
-async = require('async')
-{execCmd} = require('../util')
+path = require 'path'
+async = require 'async'
+{execCmd} = require '../util'
 
 parser =
   excludes: (project) ->
@@ -20,12 +21,17 @@ parse = (project, options, i) ->
     project.excludes = ['*']
     project.includes = project.only
 
+  if project.nochdir
+    sourceDir = process.cwd()
+  else
+    sourceDir = path.join(options.chdir, project.name)
+
   if destination.indexOf('@') is -1  # remote server
     cmd = """
     rsync -a --timeout=15 --delete-after --ignore-errors --force \\
     #{parser.includes(project)} \\
     #{parser.excludes(project)} \\
-    #{options.chdir}/#{project.name}/ #{destination}
+    #{sourceDir}/ #{destination}
     """
   else  # local destination
     cmd = """
@@ -33,7 +39,7 @@ parse = (project, options, i) ->
     -e \"ssh -p #{port}\" \\
     #{parser.includes(project)} \\
     #{parser.excludes(project)} \\
-    #{options.chdir}/#{project.name}/ #{destination}
+    #{sourceDir}/ #{destination}
     """
   return cmd
 
