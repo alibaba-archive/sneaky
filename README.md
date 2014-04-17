@@ -24,8 +24,8 @@ Teambition 部署及检测系统
     "name": "sneaky",
     "version": "HEAD",
     "destinations": [
-      "/tmp/sneaky1",
-      "/tmp/sneaky2"
+      "git@server:/tmp/sneaky1",
+      "git@server:/tmp/sneaky2"
     ],
     "excludes": [
       ".git",
@@ -38,7 +38,7 @@ Teambition 部署及检测系统
     "name": "sneaky-remote",
     "source": "http://github.com/sailxjx/sneaky",
     "destinations": [
-      "/tmp/sneaky2"
+      "www@server:/tmp/sneaky1"
     ],
     "before": "npm i --production",
     "after": "cd /tmp/sneaky2; ls"
