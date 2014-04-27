@@ -7,7 +7,7 @@ Teambition 部署及检测系统
 
 ## Feature
 
-* configuate with ini (~/.sneakyrc)
+* configuate with json (.sneakyrc.example)
 * archive with git
 * transport with rsync
 * encrypt with ssh
