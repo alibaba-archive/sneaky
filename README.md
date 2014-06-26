@@ -7,7 +7,7 @@ Teambition 部署及检测系统
 
 ## Feature
 
-* configuate with json (.sneakyrc.example)
+* configuate with json (.sneakyrc.json.example)
 * archive with git
 * transport with rsync
 * encrypt with ssh
@@ -16,7 +16,7 @@ Teambition 部署及检测系统
 
 ## Example
 
-~/.sneakyrc file
+~/.sneakyrc.json file
 
 ```json
 {
@@ -46,7 +46,7 @@ Teambition 部署及检测系统
 }
 ```
 
-deploy all projects defined in configure file
+deploy all projects defined in configuration file
 ```
 $ sneaky deploy
 ```
@@ -63,7 +63,7 @@ $ sneaky config
 
 ## Use Local Configure File
 
-put .sneakyrc in your repository
+put .sneakyrc.json in your repository
 
 and enter your repository directory
 
@@ -71,12 +71,16 @@ typein `sneaky d`
 
 or `sneaky d [project]`
 
-will deploy with your local configure file
+will deploy with your local configuration file
 
 ## Change Log
 
+###v0.5.2
+1. support for .json and .js configuration file
+2. remove in denpendence
+
 ###v0.5.0
-1. change configure file's format from ini to json
+1. change configuration file's format from ini to json
 2. add `includes`/`only` options to fit different situations, `includes` is an array mapping to rsync's `--include`, as the same as `excludes`, `only` is a alias of `includes` and `excludes`, `only: [lib/]` is the same as `includes: [lib/], excludes: *`. (ignore all files except lib directory)
 3. add `nochdir` flag, set this flag to true will deploy the current directory and use all the local files (not only files in git repositories)
 4. fix temp directory name's bug
