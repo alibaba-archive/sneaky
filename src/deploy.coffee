@@ -10,7 +10,7 @@ deploy = (options) ->
   _options = _.extend({
     chdir: "#{process.env.HOME}/.sneaky"
     force: true
-    config: "#{process.env.HOME}/.sneakyrc"
+    config: "#{process.env.HOME}/.sneakyrc.json"
   }, options)
 
   start = new Date

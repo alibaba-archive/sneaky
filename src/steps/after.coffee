@@ -8,9 +8,7 @@ parse = (project, options, i) ->
   else
     [server, dest] = destination.split(':')
     port = project.ports?[i] or 22
-    cmd = """
-      ssh -t -t #{server} -p #{port} \"#{project.after}\"
-    """
+    cmd = "ssh -t -t #{server} -p #{port} \"#{project.after}\""
   return cmd
 
 module.exports = (project, options, callback = ->) ->

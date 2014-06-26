@@ -1,2 +1,1 @@
-require("cake-dog")
-
+require 'cake-dog'

@@ -20,9 +20,6 @@ actions =
       action: action
       configFile: options.config
     config(_options)
-  initojson: ->
-    file = _.first(arguments)
-    util.initojson(file)
 
 cli = ->
   commander.version(pkg.version)
@@ -51,11 +48,6 @@ cli = ->
     .option('-c, --config <config>', 'user defined configure file')
     .usage('show|add|edit')
     .action(actions.config)
-
-  commander.command('initojson')
-    .description('change the old ini configure file to json')
-    .usage('<file>')
-    .action(actions.initojson)
 
   commander.parse(process.argv)
   commander.help() if process.argv.length < 3

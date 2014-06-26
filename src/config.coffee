@@ -2,7 +2,6 @@ _ = require('underscore')
 {loadConfig, saveConfig} = require('./util')
 read = require('read')
 logger = require('graceful-logger')
-ini = require('ini')
 async = require('async')
 path = require('path')
 

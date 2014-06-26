@@ -27,20 +27,23 @@ parse = (project, options, i) ->
     sourceDir = path.join(options.chdir, project.name)
 
   if destination.indexOf('@') is -1  # remote server
-    cmd = """
-    rsync -a --timeout=15 --delete-after --ignore-errors --force \\
-    #{parser.includes(project)} \\
-    #{parser.excludes(project)} \\
-    #{sourceDir}/ #{destination}
-    """
+    cmd = [
+      "rsync -a --timeout=15 --delete-after --ignore-errors --force"
+      parser.includes(project)
+      parser.excludes(project)
+      "#{sourceDir}/"
+      destination
+    ].join ' '
+
   else  # local destination
-    cmd = """
-    rsync -a --timeout=15 --delete-after --ignore-errors --force \\
-    -e \"ssh -p #{port}\" \\
-    #{parser.includes(project)} \\
-    #{parser.excludes(project)} \\
-    #{sourceDir}/ #{destination}
-    """
+    cmd = [
+      "rsync -a --timeout=15 --delete-after --ignore-errors --force"
+      "-e \"ssh -p #{port}\""
+      parser.includes(project)
+      parser.excludes(project)
+      "#{sourceDir}/"
+      destination
+    ].join ' '
   return cmd
 
 module.exports = (project, options, callback = ->) ->
