@@ -3,7 +3,7 @@ Sneaky
 
 Teambition 部署及检测系统
 
-[![build status](https://api.travis-ci.org/sailxjx/sneaky.png)](https://travis-ci.org/sailxjx/sneaky)
+[![build status](https://api.travis-ci.org/teambition/sneaky.png)](https://travis-ci.org/teambition/sneaky)
 
 ## Feature
 
