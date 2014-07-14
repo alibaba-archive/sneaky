@@ -51,6 +51,12 @@ util =
         for k, config of configs
           config.name or= path.basename(process.cwd()) + "-#{k}"
         next(null, configs)
+      (configs, next) ->
+        for name, config of configs
+          for key, val of config
+            if key in ['destinations', 'excludes', 'includes', 'only'] and typeof val is 'string'
+              configs[name][key] = val.split ' '
+        next null, configs
     ], callback
 
   saveConfig: (file, configs, callback = ->) ->

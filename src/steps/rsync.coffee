@@ -47,7 +47,6 @@ parse = (project, options, i) ->
   return cmd
 
 module.exports = (project, options, callback = ->) ->
-  project.destinations = [project.destinations] if typeof project.destinations is 'string'
   count = project.destinations?.length
   unless count
     return callback(new Error("missing destinations in project: #{project.name}"))

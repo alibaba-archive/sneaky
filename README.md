@@ -73,7 +73,21 @@ or `sneaky d [project]`
 
 will deploy with your local configuration file
 
+## Options
+
+* `name` (string) project name
+* `version` (string) project version, sneaky will use the version the checkout the correct git branch
+* `destinations` (array) deploy to these destinations, the style of destinations is the same in `rsync`
+* `excludes` (array) exclude paths
+* `includes` (array) include these paths, these paths will not be affected by `excludes` options
+* `only` (array) only include these paths, the others will be discarded
+* `nochdir` (boolean) if this option is true, sneaky will skip the archive step and directly use the current directory as the source directory
+
 ## Change Log
+
+###v0.5.3
+1. auto convert string typed options to array type
+2. add option descriptions in readme
 
 ###v0.5.2
 1. support for .json and .js configuration file
