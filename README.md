@@ -86,6 +86,10 @@ will deploy with your local configuration file
 
 ## Change Log
 
+###v0.5.4
+1. fix load js config file bug
+2. expand destination option to user,host,port,destination properties
+
 ###v0.5.3
 1. auto convert string typed options to array type
 2. add option descriptions in readme

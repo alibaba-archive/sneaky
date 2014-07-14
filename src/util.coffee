@@ -19,6 +19,25 @@ util =
   expandPath: (filePath) ->
     return if matches = filePath.match(/^~(.*)/) then "#{process.env.HOME}#{matches[1]}" else filePath
 
+  parseConfig: (configs) ->
+    for name, config of configs
+      for key, val of config
+        # Change array like options to array
+        if key in ['destinations', 'excludes', 'includes', 'only'] and
+           toString.call(val) is '[object String]'
+          configs[name][key] = val.split ' '
+        # Expand destinations to meanful properties
+        if key is 'destinations'
+          for i, dest of configs[name][key]
+            continue unless toString.call(dest) is '[object String]'
+            _dest = {}
+            if dest.indexOf('@') is -1  # local server
+              _dest.destination = dest
+            else
+              [_dest.user, _dest.host, _dest.destination] = dest.split /[@:]/
+            configs[name][key][i] = _dest
+    return configs
+
   getConfigPath: (file) ->
     configPath = file
     unless configPath?
@@ -35,7 +54,7 @@ util =
           configPath = file
           break
       configPath or= util.expandPath '~/.sneakyrc.json'
-    return configPath
+    return path.resolve(configPath)
 
   loadConfig: (file, callback = ->) ->
     args = arguments
@@ -55,11 +74,7 @@ util =
           config.name or= path.basename(process.cwd()) + "-#{k}"
         next(null, configs)
       (configs, next) ->
-        for name, config of configs
-          for key, val of config
-            if key in ['destinations', 'excludes', 'includes', 'only'] and typeof val is 'string'
-              configs[name][key] = val.split ' '
-        next null, configs
+        next null, util.parseConfig(configs)
     ], callback
 
   saveConfig: (file, configs, callback = ->) ->

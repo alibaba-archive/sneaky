@@ -12,9 +12,9 @@ parser =
     includes = project.includes.map (item) -> "--include=#{item}"
     return includes.join(' ')
 
-parse = (project, options, i) ->
-  destination = project.destinations[i]
-  port = project.ports?[i] or 22
+parse = (project, options, dest) ->
+  {destination, user, host, port} = dest
+  port or= 22
 
   # Hack for only
   if project.only?.length
@@ -26,19 +26,18 @@ parse = (project, options, i) ->
   else
     sourceDir = path.join(options.chdir, project.name)
 
-  if destination.indexOf('@') is -1  # remote server
-    cmd = [
-      "rsync -a --timeout=15 --delete-after --ignore-errors --force"
-      parser.includes(project)
-      parser.excludes(project)
-      "#{sourceDir}/"
-      destination
-    ].join ' '
-
-  else  # local destination
+  if user? and host?  # remote server
     cmd = [
       "rsync -a --timeout=15 --delete-after --ignore-errors --force"
       "-e \"ssh -p #{port}\""
+      parser.includes(project)
+      parser.excludes(project)
+      "#{sourceDir}/"
+      "#{user}@#{server}:#{destination}"
+    ].join ' '
+  else  # local destination
+    cmd = [
+      "rsync -a --timeout=15 --delete-after --ignore-errors --force"
       parser.includes(project)
       parser.excludes(project)
       "#{sourceDir}/"
@@ -47,10 +46,9 @@ parse = (project, options, i) ->
   return cmd
 
 module.exports = (project, options, callback = ->) ->
-  count = project.destinations?.length
-  unless count
+  unless project.destinations?.length
     return callback(new Error("missing destinations in project: #{project.name}"))
-  async.times count, (i, next) ->
-    cmd = parse(project, options, i)
+  async.eachSeries project.destinations, (dest, next) ->
+    cmd = parse(project, options, dest)
     execCmd(cmd, next)
   , callback
