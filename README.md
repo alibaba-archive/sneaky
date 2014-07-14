@@ -77,6 +77,7 @@ will deploy with your local configuration file
 
 * `name` (string) project name
 * `version` (string) project version, sneaky will use the version the checkout the correct git branch
+* `source` (string) source directory
 * `destinations` (array) deploy to these destinations, the style of destinations is the same in `rsync`
 * `excludes` (array) exclude paths
 * `includes` (array) include these paths, these paths will not be affected by `excludes` options

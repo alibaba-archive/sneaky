@@ -43,7 +43,10 @@ util =
       (next) ->
         configPath = util.getConfigPath file
         try
-          configs = JSON.parse(fs.readFileSync configPath)
+          if path.extname(configPath) in ['.json', '.js']
+            configs = require configPath
+          else
+            configs = JSON.parse(fs.readFileSync configPath)
         catch e
           configs = {}
         next null, configs
