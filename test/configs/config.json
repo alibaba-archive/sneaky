@@ -13,9 +13,7 @@
   "ini_a": {
     "name": "ini_a",
     "source": "test/ini",
-    "destinations": [
-      "/tmp/ini_a"
-    ],
+    "destinations": "/tmp/ini_a",
     "excludes": [
       "node_modules"
     ]
