@@ -33,7 +33,7 @@ parse = (project, options, dest) ->
       parser.includes(project)
       parser.excludes(project)
       "#{sourceDir}/"
-      "#{user}@#{server}:#{destination}"
+      "#{user}@#{host}:#{destination}"
     ].join ' '
   else  # local destination
     cmd = [
