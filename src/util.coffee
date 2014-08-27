@@ -13,8 +13,8 @@ util =
   execCmd: (cmd, callback = ->) ->
     logger.info("run command: #{cmd}")
     child = exec(cmd, callback)
-    child.stdout.on 'data', (data) -> process.stdout.write(data)
-    child.stderr.on 'data', (data) -> process.stderr.write(data)
+    child.stdout.pipe process.stdout
+    child.stderr.pipe process.stderr
 
   expandPath: (filePath) ->
     return if matches = filePath.match(/^~(.*)/) then "#{process.env.HOME}#{matches[1]}" else filePath
