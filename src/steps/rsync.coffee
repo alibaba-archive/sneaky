@@ -28,7 +28,7 @@ parse = (project, options, dest) ->
 
   if user? and host?  # remote server
     cmd = [
-      "rsync -a --timeout=15 --delete-after --ignore-errors --force"
+      "rsync -a --delete-after --ignore-errors --force"
       "-e \"ssh -p #{port}\""
       parser.includes(project)
       parser.excludes(project)
