@@ -1,9 +1,0 @@
-{
-  "async": {
-    "source": "test/async",
-    "destinations": [
-      "/tmp/async"
-    ],
-    "nochdir": true
-  }
-}

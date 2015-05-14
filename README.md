@@ -112,5 +112,9 @@ will deploy with your local configuration file
 ###v0.3.0
 1. support use `.sneakyrc` file in current pwd
 
+## TIPS
+
+1. If you are unfamiliar with rsync's filter rules, read [this answer](http://unix.stackexchange.com/questions/2161/rsync-filter-copying-one-pattern-only#answer-2503)
+
 ## LICENSE
 MIT
