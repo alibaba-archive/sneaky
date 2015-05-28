@@ -1,33 +1,28 @@
 #######################################################
 # Skyfile: setup your deploy tasks
-#
 ########################################################
+sneaky = require './'
 
-fs = require 'fs'
-path = require 'path'
-pkg = require './package'
-sneaky = require './src/sneaky'
+sneaky 'sneaky:test', ->
 
-filter = """
-- .git/**
-"""
+  @description = 'Deploy to test environment'
 
-sneaky 'sneaky', ->
+  @user = 'username'
 
-  @filter = filter
+  @host = 'your.server'
 
-  @path = '/tmp/sneaky'
+  @path = '/your/destination'
 
-  @pre 'rsync', -> @execCmd 'npm install'
+  # Ignore the src directory
+  # Filter pattern
+  @filter = '''
+  - src
+  - node_modules
+  '''
 
-  @post 'rsync', -> @execRemoteCmd 'npm ls'
+  # Execute before transporting files to server
+  @before 'coffee -o lib -c src'
 
-  @pre 'link', ->
-
-  @post 'link', ->
-
-.env 'test', ->
-
-  @user = 'jarvis'
-
-  @host = '192.168.0.21'
+  # Execute after transporting files to server and link to the current directory
+  # This script will be executed through ssh command
+  @after 'npm install --ignore-scripts'

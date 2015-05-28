@@ -1,19 +1,25 @@
-Mentor = require './mentor'
+Promise = require 'bluebird'
+path = require 'path'
 Task = require './task'
 
-_mentors = {}
+_tasks = {}
 
-module.exports = sneaky = (appName, appStatement) ->
-  unless _mentors[appName]
-    _mentors[appName] = new Mentor appName, appStatement
-  _mentors[appName]
+sneaky = (taskName, statement) ->
+  unless _tasks[taskName]
+    task = new Task
+    task.taskName = taskName
+    statement.call task, task if toString.call(statement) is '[object Function]'
+    task.initialize()
+    _tasks[taskName] = task
+  _tasks[taskName]
 
-sneaky.Mentor = Mentor
-sneaky.Task = Task
+sneaky.getTask = (taskName) ->
+  unless _tasks[taskName]
+    # Treat taskName as event name
+    taskName = "#{path.basename(process.cwd())}:#{taskName}"
+  throw new Error("Task #{taskName} not found") unless _tasks[taskName]
+  _tasks[taskName]
 
-sneaky.registerStep = (stepName, step, options) -> Task.registerStep.apply this, arguments
+sneaky.getTasks = -> _tasks
 
-# Load build-in steps
-sneaky.registerStep 'prepare', require './steps/prepare'
-sneaky.registerStep 'transport', require './steps/transport'
-sneaky.registerStep 'switch', require './steps/switch'
+module.exports = global.sneaky = sneaky

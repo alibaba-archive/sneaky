@@ -4,7 +4,7 @@
   "description": "Deployment Genius",
   "main": "lib/sneaky.js",
   "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --require coffee-script/register test/main.coffee",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --timeout 30000 --require coffee-script/register test/main.coffee",
     "prepublish": "rm -rf lib && coffee -o lib -c src"
   },
   "repository": {
@@ -27,13 +27,13 @@
   },
   "dependencies": {
     "bluebird": "^2.9.25",
+    "chalk": "^1.0.0",
     "coffee-script": "^1.9.2",
-    "commander": "^2.8.1",
+    "commander": "^2.8.0",
     "graceful-logger": "^0.4.3",
     "lodash": "^3.8.0",
     "mkdirp": "^0.5.0",
     "moment": "^2.10.3",
-    "rimraf": "^2.3.3",
-    "ssh2": "^0.4.8"
+    "rimraf": "^2.3.3"
   }
 }

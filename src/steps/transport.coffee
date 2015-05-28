@@ -14,9 +14,11 @@ module.exports = (task) ->
       cmd += " --filter=\"#{filter}\""
 
   # Add source destination
-  cmd += " #{task.rsyncSource}"
+  cmd += " #{task.srcPath}/"
 
   # Add remote destination
-  cmd += " -e \"ssh -p #{task.port}\" #{task.user}@#{task.host}:#{task.realPath}"
+  cmd += " -e \"ssh -p #{task.port}\" #{task.user}@#{task.host}:#{task.targetPath}"
 
   task.execCmd cmd
+
+  .then -> task.execRemoteCmd "cd #{task.path}; ln -sfn #{task.targetPath} #{task.path}/current"
