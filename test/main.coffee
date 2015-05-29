@@ -1,11 +1,14 @@
 should = require 'should'
 sneaky = require '../src/sneaky'
+sshServer = require './ssh-server'
 
 task = sneaky 'sneaky:deploy', ->
 
-  @user = 'jarvis'
+  @user = process.env.USER
 
-  @host = '192.168.0.21'
+  @host = '127.0.0.1'
+
+  @port = 2222
 
   @path = '/tmp/sneaky'
 
