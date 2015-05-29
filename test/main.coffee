@@ -1,14 +1,30 @@
 should = require 'should'
+logger = require 'graceful-logger'
+chalk = require 'chalk'
+Task = require '../src/task'
 sneaky = require '../src/sneaky'
-sshServer = require './ssh-server'
+
+if process.env.PLATFORM is 'travis'
+  # Hack on test cases
+  __execCmd = Task.prototype._execCmd
+  Task.prototype._execCmd = (cmd) ->
+    if cmd.indexOf('rsync') is 0
+      # Slice the ssh part of rsync
+      cmd = cmd.replace /\-e.*?\:/, ''
+
+    __execCmd.call this, cmd
+  # Do not execute command on remote server
+  Task.prototype._wrapRemoteCmd = (cmd) ->
+    cmd = "cd #{task.targetPath} && #{cmd}" unless cmd.indexOf('cd ') is 0
+    cmd
 
 task = sneaky 'sneaky:deploy', ->
 
-  @user = process.env.USER
+  @user = 'jarvis'
 
-  @host = '127.0.0.1'
+  @host = '192.168.0.21'
 
-  @port = 2222
+  @port = 22
 
   @path = '/tmp/sneaky'
 
@@ -36,6 +52,7 @@ describe 'Deploy', ->
     task.stdout.on 'data', (data) -> output += data
 
     task.deploy()
+    .delay 1
     .then ->
       output.should.containEql "Sneaky: '0.1.1'"
       done()
@@ -46,6 +63,7 @@ describe 'History', ->
   it 'should display histories of project', (done) ->
 
     task.history()
+    .delay 1
     .map (history) ->
       history.should.have.properties 'date', 'current', 'commit'
     .then -> done()
@@ -56,6 +74,7 @@ describe 'Rollback', ->
   before (done) ->
     task.version = 'v0.2.0'
     task.deploy()
+    .delay 1
     .then -> done()
     .catch done
 
@@ -66,6 +85,7 @@ describe 'Rollback', ->
     task.stdout.on 'data', (data) -> output += data
 
     task.rollback()
+    .delay 1
     .then ->
       # Contain the previous version by rollback
       output.should.containEql "Sneaky: '0.1.1'"

@@ -1,7 +1,7 @@
 Sneaky
 =======
 
-Teambition 部署及检测系统
+Deployment suite
 
 [![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]

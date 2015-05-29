@@ -109,9 +109,7 @@ class Task
       beforeCurrent = false
       chosenHistory = false
       diffNum = 0
-
-      histories.sort -> 1
-
+      histories.reverse()
       .some (history) ->
         # Do not checkout the version after current
         beforeCurrent = true if history.current
