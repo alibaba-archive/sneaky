@@ -58,7 +58,7 @@ module.exports = (task) ->
       decorate = matches[3]
       version = false
       decorate?.split ','
-      .some (dec) -> version = dec.split(':')[1].trim() if dec.indexOf('tag') is 0
+      .some (dec) -> version = dec.split(':')[1].trim() if dec.trim().indexOf('tag') is 0
       version or= commit
       # Create directory of target path
       task.targetPath = targetPath = path.join task.path, moment().format('YYYYMMDDHHmmss') + '-' + version
