@@ -1,55 +1,103 @@
+require 'coffee-script/register'
+path = require 'path'
 commander = require 'commander'
-_ = require 'underscore'
+Promise = require 'bluebird'
+fs = require 'fs'
+logger = require 'graceful-logger'
+chalk = require 'chalk'
+
 pkg = require '../package'
-deploy = require './deploy'
-config = require './config'
-util = require './util'
+sneaky = require './sneaky'
 
-actions =
-  deploy: ->
-    options = _.last(arguments)
-    _options =
-      projects: _.first(arguments, arguments.length - 1)
-      config: options.config or null
-    deploy(_options)
-  config: ->
-    options = _.last(arguments)
-    action = _.first(arguments)
-    action = if typeof action is 'string' then action else null
-    _options =
-      action: action
-      configFile: options.config
-    config(_options)
+[
+  'Skyfile'
+  'skyfile'
+  'skyfile.js'
+  'Skyfile.js'
+  'skyfile.coffee'
+  'Skyfile.coffee'
+].some (fileName) ->
+  filePath = path.join process.cwd(), fileName
+  try
+    require filePath if fs.existsSync filePath
+  catch err
+    logger.warn err.message
+    process.exit 1
 
-cli = ->
-  commander.version(pkg.version)
-    .usage('<command> [options] [projects]')
+_deployAction = (taskName) ->
+  Promise.resolve()
+  .then -> sneaky.getTask taskName
+  .then (task) ->
+    task.stdout.pipe process.stdout
+    task.stderr.pipe process.stderr
+    task.deploy()
+  .catch (err) -> logger.warn err.message
 
-  commander.command('deploy')
-    .description('deploy local projects to servers')
-    .option('-c, --config <config>', 'user defined configure file')
-    .usage('[options] [projects]')
-    .action(actions.deploy)
+_historyAction = (taskName) ->
+  Promise.resolve()
+  .then -> sneaky.getTask taskName
+  .then (task) ->
+    task.stdout.pipe process.stdout
+    task.stderr.pipe process.stderr
+    task.history()
+  .then (histories) ->
+    histories.forEach (history) ->
+      if history.current
+        console.log chalk.green "* #{history.commit}\t#{history.date}"
+      else
+        console.log "  #{history.commit}\t#{history.date}"
+  .catch (err) -> logger.warn err.message
 
-  commander.command('d')
-    .description('(alias) of deploy')
-    .option('-c, --config <config>', 'user defined configure file')
-    .usage('[options] [projects]')
-    .action(actions.deploy)
+_rollbackAction = (taskName, version) ->
+  version = 1 if arguments.length is 2
+  Promise.resolve()
+  .then -> sneaky.getTask taskName
+  .then (task) ->
+    task.stdout.pipe process.stdout
+    task.stderr.pipe process.stderr
+    task.rollback version
+  .catch (err) -> logger.warn err.message
 
-  commander.command('config')
-    .description('add or update your configure file')
-    .option('-c, --config <config>', 'user defined configure file')
-    .usage('show|add|edit')
-    .action(actions.config)
+module.exports = cli = ->
 
-  commander.command('c')
-    .description('(alias) of config')
-    .option('-c, --config <config>', 'user defined configure file')
-    .usage('show|add|edit')
-    .action(actions.config)
+  commander.version pkg.version, '-v, --version'
+  .usage '<command> taskName'
 
-  commander.parse(process.argv)
+  commander.option '-T, --tasks', 'display the tasks'
+  .on 'tasks', ->
+    tasks = sneaky.getTasks()
+
+    Object.keys tasks
+    .forEach (key) ->
+      task = tasks[key]
+      console.log "#{task.taskName}\t\t#{task.description or ''}"
+
+  commander.command 'deploy'
+  .description 'deploy application to server'
+  .action _deployAction
+
+  commander.command 'history'
+  .description 'display previous deploy histories'
+  .action _historyAction
+
+  commander.command 'rollback'
+  .usage 'taskName [version]'
+  .description 'rollback to the previous version'
+  .action _rollbackAction
+
+  commander.command 'd'
+  .description 'alias of deploy'
+  .action _deployAction
+
+  commander.command 'h'
+  .description 'alias of history'
+  .action _historyAction
+
+  commander.command 'r'
+  .usage 'taskName [version]'
+  .description 'alias of rollback'
+  .action _rollbackAction
+
+  commander.parse process.argv
+
   commander.help() if process.argv.length < 3
-
-module.exports = cli

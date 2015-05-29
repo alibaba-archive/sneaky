@@ -1,90 +1,78 @@
 Sneaky
 =======
 
-Teambition 部署及检测系统
+Deployment suite
 
-[![build status](https://api.travis-ci.org/teambition/sneaky.png)](https://travis-ci.org/teambition/sneaky)
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
 
 ## Feature
 
-* configuate with json (.sneakyrc.json.example)
+* configuate with js/coffee script (Skyfile.js|Skyfile.coffee)
 * archive with git
 * transport with rsync
 * encrypt with ssh
-* local pre-hook (before rsync)
-* remote post-hook (after rsync)
+* customized pre hooks and post hooks
 
 ## Example
 
-~/.sneakyrc.json file
+```coffeescript
+sneaky 'sneaky:test', ->
 
-```json
-{
-  "sneaky": {
-    "name": "sneaky",
-    "version": "HEAD",
-    "destinations": [
-      "git@server:/tmp/sneaky1",
-      "git@server:/tmp/sneaky2"
-    ],
-    "excludes": [
-      ".git",
-      "node_modules"
-    ],
-    "before": "npm i --production",
-    "after": "cd /tmp/sneaky; ls"
-  },
-  "sneaky-remote": {
-    "name": "sneaky-remote",
-    "source": "http://github.com/sailxjx/sneaky",
-    "destinations": [
-      "www@server:/tmp/sneaky1"
-    ],
-    "before": "npm i --production",
-    "after": "cd /tmp/sneaky2; ls"
-  }
-}
+  @description = 'Deploy to test environment'
+
+  # Version of your project
+  @version = "v0.0.1"
+
+  @user = 'username'
+
+  @host = 'your.server'
+
+  @path = '/your/destination'
+
+  # Ignore the src directory
+  # Filter pattern
+  @filter = '''
+  - src
+  - node_modules
+  '''
+
+  # Execute before transporting files to server
+  @before 'coffee -o lib -c src'
+
+  # Execute after transporting files to server and link to the current directory
+  # This script will be executed through ssh command
+  @after 'npm install --ignore-scripts'
 ```
 
-deploy all projects defined in configuration file
-```
-$ sneaky deploy
+## Help
 ```
 
-deploy chosen projects
+  Usage: sneaky <command> taskName
+
+
+  Commands:
+
+    deploy     deploy application to server
+    history    display previous deploy histories
+    rollback   rollback to the previous version
+    d          alias of deploy
+    h          alias of history
+    r          alias of rollback
+
+  Options:
+
+    -h, --help     output usage information
+    -v, --version  output the version number
+    -T, --tasks    display the tasks
+
 ```
-$ sneaky deploy async
-```
 
-configure sneaky
-```
-$ sneaky config
-```
+## ChangeLog
 
-## Use Local Configure File
-
-put .sneakyrc.json in your repository
-
-and enter your repository directory
-
-typein `sneaky d`
-
-or `sneaky d [project]`
-
-will deploy with your local configuration file
-
-## Options
-
-* `name` (string) project name
-* `version` (string) project version, sneaky will use the version the checkout the correct git branch
-* `source` (string) source directory
-* `destinations` (array) deploy to these destinations, the style of destinations is the same in `rsync`
-* `excludes` (array) exclude paths
-* `includes` (array) include these paths, these paths will not be affected by `excludes` options
-* `only` (array) only include these paths, the others will be discarded
-* `nochdir` (boolean) if this option is true, sneaky will skip the archive step and directly use the current directory as the source directory
-
-## Change Log
+###v1.0.0
+1. Configuate with js/coffee script
+2. Deploy to sub directory with version and timestamp prefix
 
 ###v0.5.4
 1. fix load js config file bug
@@ -112,5 +100,15 @@ will deploy with your local configuration file
 ###v0.3.0
 1. support use `.sneakyrc` file in current pwd
 
+## TIPS
+
+1. If you are unfamiliar with rsync's filter rules, read [this answer](http://unix.stackexchange.com/questions/2161/rsync-filter-copying-one-pattern-only#answer-2503)
+
 ## LICENSE
 MIT
+
+[npm-url]: https://npmjs.org/package/sneaky
+[npm-image]: http://img.shields.io/npm/v/sneaky.svg
+
+[travis-url]: https://travis-ci.org/teambition/sneaky
+[travis-image]: http://img.shields.io/travis/teambition/sneaky.svg

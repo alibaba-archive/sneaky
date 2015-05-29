@@ -2,37 +2,39 @@
   "name": "sneaky",
   "version": "0.5.6",
   "description": "Deployment Genius",
-  "main": "lib/index.js",
+  "main": "lib/sneaky.js",
   "scripts": {
-    "test": "make test"
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --timeout 30000 --require coffee-script/register test/main.coffee",
+    "prepublish": "rm -rf lib && coffee -o lib -c src"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:teambition/Sneaky"
+    "url": "https://github.com/teambition/sneaky"
   },
   "keywords": [
     "deploy",
-    "coffee",
     "git",
     "ops"
   ],
   "bin": {
     "sneaky": "./bin/sneaky"
   },
-  "author": "sailxjx",
+  "author": "Xu Jingxin",
   "license": "MIT",
   "devDependencies": {
-    "should": "^4.0.4",
-    "coffee-script": "^1.7.1",
-    "mocha": "^1.20.1"
+    "mocha": "^2.2.5",
+    "should": "^6.0.1",
+    "ssh2": "^0.4.8"
   },
   "dependencies": {
-    "graceful-logger": "^0.4.1",
-    "async": "^0.9.0",
-    "commander": "^2.2.0",
-    "graceful-fs": "^3.0.2",
-    "underscore": "^1.6.0",
-    "read": "^1.0.5",
-    "mkdirp": "^0.5.0"
+    "bluebird": "^2.9.25",
+    "chalk": "^1.0.0",
+    "coffee-script": "^1.9.2",
+    "commander": "^2.8.0",
+    "graceful-logger": "^0.4.3",
+    "lodash": "^3.8.0",
+    "mkdirp": "^0.5.0",
+    "moment": "^2.10.3",
+    "rimraf": "^2.3.3"
   }
 }
