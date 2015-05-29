@@ -86,11 +86,11 @@ class Task
         false
       .filter (history) -> history
       .map (history) ->
-        [date, commit] = history.split '-'
+        [date, commit...] = history.split '-'
         m = moment date, 'YYYYMMDDHHmmss'
 
         date: m.format('YYYY-MM-DD HH:mm:ss')
-        commit: commit
+        commit: commit.join '-'
         current: if current is history then true else false
         dirname: history
         path: path.join task.path, history
