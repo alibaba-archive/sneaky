@@ -26,6 +26,7 @@ sneaky = require './sneaky'
 
 _deployAction = (taskName) ->
   Promise.resolve()
+  .then -> throw new Error "Invalid task name" unless toString.call(taskName) is '[object String]'
   .then -> sneaky.getTask taskName
   .then (task) ->
     task.stdout.pipe process.stdout
@@ -35,6 +36,7 @@ _deployAction = (taskName) ->
 
 _historyAction = (taskName) ->
   Promise.resolve()
+  .then -> throw new Error "Invalid task name" unless toString.call(taskName) is '[object String]'
   .then -> sneaky.getTask taskName
   .then (task) ->
     task.stdout.pipe process.stdout
@@ -51,6 +53,7 @@ _historyAction = (taskName) ->
 _rollbackAction = (taskName, version) ->
   version = 1 if arguments.length is 2
   Promise.resolve()
+  .then -> throw new Error "Invalid task name" unless toString.call(taskName) is '[object String]'
   .then -> sneaky.getTask taskName
   .then (task) ->
     task.stdout.pipe process.stdout
