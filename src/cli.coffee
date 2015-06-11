@@ -87,10 +87,12 @@ module.exports = cli = ->
       console.log "#{task.taskName}\t\t#{task.description or ''}"
 
   commander.command 'deploy'
+  .usage 'taskName [options]'
   .description 'deploy application to server'
   .action _deployAction
 
   commander.command 'history'
+  .usage 'taskName [options]'
   .description 'display previous deploy histories'
   .action _historyAction
 
@@ -105,10 +107,12 @@ module.exports = cli = ->
   .action _forwardAction
 
   commander.command 'd'
+  .usage 'taskName [options]'
   .description 'alias of deploy'
   .action _deployAction
 
   commander.command 'h'
+  .usage 'taskName [options]'
   .description 'alias of history'
   .action _historyAction
 
