@@ -4,13 +4,18 @@ Task = require './task'
 
 _tasks = {}
 
-sneaky = (taskName, statement) ->
+sneaky = (taskName, description, statement) ->
   unless _tasks[taskName]
     task = new Task
     task.taskName = taskName
+
+    statement = description if toString.call(description) is '[object Function]'
+    task.description = description if toString.call(description) is '[object String]'
     statement.call task, task if toString.call(statement) is '[object Function]'
+
     task.initialize()
     _tasks[taskName] = task
+
   _tasks[taskName]
 
 sneaky.getTask = (taskName) ->
