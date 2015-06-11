@@ -95,38 +95,47 @@ class Task
         dirname: history
         path: path.join task.path, history
 
-  rollback: (n = 1) ->
+  _rollto: (version = 1, direction = 'down') ->
     task = this
 
-    version = n if isNaN(Number(n))  # Rollback to the specific version
-
-    logger.info "start rollback #{task.taskName} to version #{version or n}"
+    # Version maybe string typed
+    # Rollback to the specific version
+    version = Number(version) unless isNaN(Number(version))
 
     task.history()
 
     .then (histories) ->
-
-      beforeCurrent = false
+      meetCurrent = false
       chosenHistory = false
       diffNum = 0
-      histories.reverse()
-      .some (history) ->
-        # Do not checkout the version after current
-        beforeCurrent = true if history.current
-        return unless beforeCurrent
-        if version
-          if commit is version
+      totalCount = histories.length
+
+      histories = histories.reverse() if direction is 'down'
+
+      histories.some (history, idx) ->
+        meetCurrent = true if history.current
+        return unless meetCurrent
+        # Roll to the first/last version
+        if version is 'edge'
+          if idx is totalCount - 1
             chosenHistory = history
             return true
+        # Roll to the specific version
+        else if toString.call(version) is '[object String]'
+          if history.commit.indexOf(version) > -1
+            chosenHistory = history
+            return true
+        # Roll by number
+        else if toString.call(version) is '[object Number]'
+          if version is 0
+            chosenHistory = history
+            return true
+          version -= 1
         else
-          if n is 0
-            chosenHistory = history
-            return true
-          # Skip this version
-          n -= 1
+          throw new Error("Invalid version '#{version}'")
         return false
 
-      throw new Error("Can not find the rollback version") unless chosenHistory
+      throw new Error("Can not find the rollback version '#{version}'") unless chosenHistory
 
       cmd = "cd #{task.path}; ln -sfn #{chosenHistory.path} #{path.join task.path, 'current'}"
       task.execRemoteCmd cmd
@@ -137,6 +146,20 @@ class Task
       if task._postHooks?.transport?.length
         return Promise.resolve task._postHooks.transport
         .each (fn) -> fn.call task, task
+
+  rollback: (version = 1) ->
+    logger.info "start rollback #{@taskName} to version #{version}"
+
+    version = 'edge' if version is 'first'
+
+    @_rollto version, 'down'
+
+  forward: (version = 1) ->
+    logger.info "start forward #{@taskName} to version #{version}"
+
+    version = 'edge' if version is 'last'
+
+    @_rollto version, 'up'
 
   ###*
    * Register pre hooks on step

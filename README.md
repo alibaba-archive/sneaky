@@ -70,6 +70,9 @@ sneaky 'sneaky:test', ->
 
 ## ChangeLog
 
+###v1.1.0
+1. Add `forward` command
+
 ###v1.0.0
 1. Configuate with js/coffee script
 2. Deploy to sub directory with version and timestamp prefix

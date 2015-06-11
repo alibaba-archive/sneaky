@@ -61,6 +61,17 @@ _rollbackAction = (taskName, version) ->
     task.rollback version
   .catch (err) -> logger.warn err.message
 
+_forwardAction = (taskName, version) ->
+  version = 1 if arguments.length is 2
+  Promise.resolve()
+  .then -> throw new Error "Invalid task name" unless toString.call(taskName) is '[object String]'
+  .then -> sneaky.getTask taskName
+  .then (task) ->
+    task.stdout.pipe process.stdout
+    task.stderr.pipe process.stderr
+    task.forward version
+  .catch (err) -> logger.warn err.message
+
 module.exports = cli = ->
 
   commander.version pkg.version, '-v, --version'
@@ -88,6 +99,11 @@ module.exports = cli = ->
   .description 'rollback to the previous version'
   .action _rollbackAction
 
+  commander.command 'forward'
+  .usage 'taskName [version]'
+  .description 'roll forward to the later version, opposite of rollback'
+  .action _forwardAction
+
   commander.command 'd'
   .description 'alias of deploy'
   .action _deployAction
@@ -100,6 +116,11 @@ module.exports = cli = ->
   .usage 'taskName [version]'
   .description 'alias of rollback'
   .action _rollbackAction
+
+  commander.command 'f'
+  .usage 'taskName [version]'
+  .description 'alias of forward'
+  .action _forwardAction
 
   commander.parse process.argv
 

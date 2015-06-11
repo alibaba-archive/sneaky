@@ -69,7 +69,7 @@ describe 'History', ->
     .then -> done()
     .catch done
 
-describe 'Rollback', ->
+describe 'Rollback & Forward', ->
 
   before (done) ->
     task.version = 'v0.2.0'
@@ -89,5 +89,17 @@ describe 'Rollback', ->
     .then ->
       # Contain the previous version by rollback
       output.should.containEql "Sneaky: '0.1.1'"
+      done()
+    .catch done
+
+  it 'should forward to the last version', (done) ->
+    output = ''
+
+    task.stdout.on 'data', (data) -> output += data
+
+    task.forward()
+    .delay 1
+    .then ->
+      output.should.containEql "Sneaky: '0.2.0'"
       done()
     .catch done
