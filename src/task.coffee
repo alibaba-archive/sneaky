@@ -69,7 +69,7 @@ class Task
     task = this
     Promise.resolve()
     .then ->
-      sshCmd = task._wrapRemoteCmd "cd #{task.path}; ls -ltr | tail -n 30"
+      sshCmd = task._wrapRemoteCmd "cd #{task.path}; ls -l | tail -n 30"
       new Promise (resolve, reject) ->
         child = exec sshCmd, (err, out) ->
           return reject(err) if err
