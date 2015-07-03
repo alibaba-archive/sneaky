@@ -11,7 +11,7 @@ module.exports = (task) ->
   # Add filters
   if toString.call task.filter is '[object String]'
     task.filter.split('\n').forEach (filter) ->
-      cmd += " --filter=\"#{filter}\""
+      cmd += " --filter=\"#{filter.trim()}\""
 
   # Add source destination
   cmd += " #{task.srcPath}/"
