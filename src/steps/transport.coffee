@@ -19,6 +19,8 @@ module.exports = (task) ->
   # Add remote destination
   cmd += " -e \"ssh -p #{task.port}\" #{task.user}@#{task.host}:#{task.targetPath}"
 
-  task.execCmd cmd
+  task.execRemoteCmd "cd ~/ && mkdir -p #{task.targetPath}"
+
+  .then -> task.execCmd cmd
 
   .then -> task.execRemoteCmd "cd #{task.path}; ln -sfn #{task.targetPath} #{task.path}/current"

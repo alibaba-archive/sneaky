@@ -46,9 +46,7 @@ module.exports = (task) ->
   if task.overwrite
     # Do not create new directories for each deployment
     $targetPath = Promise.resolve()
-    .then ->
-      task.targetPath = targetPath = path.join task.path, 'source'
-      task.execRemoteCmd "cd ~/ && mkdir -p #{targetPath}"
+    .then -> task.targetPath = targetPath = path.join task.path, 'source'
   else
     $targetPath = $srcPath
     .then -> task.execCmd "git log #{task.version} --decorate --oneline | head -n 1"
@@ -62,7 +60,6 @@ module.exports = (task) ->
       version or= commit
       # Create directory of target path
       task.targetPath = targetPath = path.join task.path, moment().format('YYYYMMDDHHmmss') + '-' + version
-      task.execRemoteCmd "cd ~/ && mkdir -p #{targetPath}"
 
   $chdir = Promise.all [$targetPath, $srcPath]
   .then ([targetPath, srcPath]) -> process.chdir srcPath
