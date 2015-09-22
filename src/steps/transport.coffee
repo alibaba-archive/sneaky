@@ -23,4 +23,4 @@ module.exports = (task) ->
 
   .then -> task.execCmd cmd
 
-  .then -> task.execRemoteCmd "cd #{task.path}; ln -sfn #{task.targetPath} #{task.path}/current"
+  .then -> task.execRemoteCmd "cd #{task.path} && ln -sfn #{task.uploadVersion} current"
