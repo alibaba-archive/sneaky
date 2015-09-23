@@ -46,7 +46,9 @@ module.exports = (task) ->
   if task.overwrite
     # Do not create new directories for each deployment
     $targetPath = Promise.resolve()
-    .then -> task.targetPath = targetPath = path.join task.path, 'source'
+    .then -> 
+      task.uploadVersion = 'source'
+      task.targetPath = targetPath = path.join task.path, task.uploadVersion
   else
     $targetPath = $srcPath
     .then -> task.execCmd "git log #{task.version} --decorate --oneline | head -n 1"
