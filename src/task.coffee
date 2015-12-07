@@ -1,13 +1,14 @@
 path = require 'path'
 stream = require 'stream'
 {exec, spawn} = require 'child_process'
+{EventEmitter} = require 'events'
 fs = require 'fs'
 logger = require 'graceful-logger'
 moment = require 'moment'
 Promise = require 'bluebird'
 Promise.promisifyAll fs
 
-class Task
+class Task extends EventEmitter
 
   constructor: ->
     @_preHooks = {}
@@ -62,7 +63,9 @@ class Task
 
       $executor
 
-    .then -> logger.info "finish deploy #{task.taskName}"
+    .then ->
+      process.chdir task.source
+      logger.info "finish deploy #{task.taskName}"
 
   history: ->
     task = this

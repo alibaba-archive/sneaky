@@ -54,6 +54,7 @@ module.exports = (task) ->
     .then -> task.execCmd "git log #{task.version} --decorate --oneline | head -n 1"
     .then (log) ->
       matches = log.match /([0-9a-z]{7})\ (\((.*)\) )?/i
+      console.log 'matches', matches
       commit = matches[1]
       decorate = matches[3]
       version = false

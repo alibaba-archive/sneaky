@@ -3,6 +3,7 @@ node_js:
   - "0.10"
   - "0.11"
   - "0.12"
-env: PLATFORM=travis
+  - "4"
+  - "5"
 git:
   depth: 9999999

@@ -4,7 +4,7 @@
   "description": "Deployment Genius",
   "main": "lib/sneaky.js",
   "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --timeout 30000 --require coffee-script/register test/main.coffee",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --require coffee-script/register test/main.coffee",
     "prepublish": "rm -rf lib && coffee -o lib -c src"
   },
   "repository": {

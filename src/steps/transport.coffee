@@ -14,7 +14,9 @@ module.exports = (task) ->
       cmd += " --filter=\"#{filter.trim()}\""
 
   # Add source destination
-  cmd += " #{task.srcPath}/"
+  if task.deployPath then task.srcPath = path.join task.srcPath, task.deployPath
+
+  cmd += " #{path.join(task.srcPath, '/')}"
 
   # Add remote destination
   cmd += " -e \"ssh -p #{task.port}\" #{task.user}@#{task.host}:#{task.targetPath}"
