@@ -16,19 +16,21 @@ module.exports = (task) ->
   task.source or= process.cwd()
   task.version or= 'HEAD'
 
+  tmpdir = path.join process.env.HOME, '.sneaky', "#{Date.now()}"
+
   # Do not change directory
   process.chdir task.source
   if task.nochdir
     $srcPath = Promise.resolve(task.source)
   else
-    srcPath = path.join task.tmpdir, 'deploy'
+    srcPath = path.join tmpdir, 'deploy'
     # Cleanup the tmp directory first
-    $mkTmpDir = rimrafAsync task.tmpdir
-    .then -> mkdirpAsync task.tmpdir
+    $mkTmpDir = rimrafAsync tmpdir
+    .then -> mkdirpAsync tmpdir
     .then -> mkdirpAsync srcPath
 
     if /^(http|git|ssh)/.test task.source  # Remote repositories
-      sourceRepos = path.join task.tmpdir, 'git-cache'
+      sourceRepos = path.join tmpdir, 'git-cache'
       $sourceRepos = $mkTmpDir
       .then -> task.execCmd "git clone #{task.source} #{sourceRepos}"
       .then -> process.chdir sourceRepos

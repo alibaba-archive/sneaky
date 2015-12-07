@@ -29,7 +29,6 @@ class Task
     task.appName or= task.taskName.split(':')[0]
     task.taskName or= path.basename process.cwd()
     task.source or= process.cwd()
-    task.tmpdir or= path.join process.env.HOME, '.sneaky', task.appName
     task.port or= 22
     throw new Error("Task #{task.taskName}'s path is undefined") unless task.path
 
