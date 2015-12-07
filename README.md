@@ -70,6 +70,10 @@ sneaky 'sneaky:test', ->
 
 ## ChangeLog
 
+###v1.1.6
+1. Add deployPath to set base source directory on deploy process
+2. Create temporary directories by timestamp
+
 ###v1.1.0
 1. Add `forward` command
 
