@@ -1,6 +1,6 @@
 {
   "name": "sneaky",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "Deployment Genius",
   "main": "lib/sneaky.js",
   "scripts": {
