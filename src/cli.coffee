@@ -32,7 +32,9 @@ _deployAction = (taskName) ->
     task.stdout.pipe process.stdout
     task.stderr.pipe process.stderr
     task.deploy()
-  .catch (err) -> logger.warn err.message
+  .catch (err) ->
+    logger.warn err.message
+    process.exit 1
 
 _historyAction = (taskName) ->
   Promise.resolve()
@@ -48,7 +50,9 @@ _historyAction = (taskName) ->
         console.log chalk.green "* #{history.commit}\t#{history.date}"
       else
         console.log "  #{history.commit}\t#{history.date}"
-  .catch (err) -> logger.warn err.message
+  .catch (err) ->
+    logger.warn err.message
+    process.exit 1
 
 _rollbackAction = (taskName, version) ->
   version = 1 if arguments.length is 2
@@ -59,7 +63,9 @@ _rollbackAction = (taskName, version) ->
     task.stdout.pipe process.stdout
     task.stderr.pipe process.stderr
     task.rollback version
-  .catch (err) -> logger.warn err.message
+  .catch (err) ->
+    logger.warn err.message
+    process.exit 1
 
 _forwardAction = (taskName, version) ->
   version = 1 if arguments.length is 2
@@ -70,7 +76,9 @@ _forwardAction = (taskName, version) ->
     task.stdout.pipe process.stdout
     task.stderr.pipe process.stderr
     task.forward version
-  .catch (err) -> logger.warn err.message
+  .catch (err) ->
+    logger.warn err.message
+    process.exit 1
 
 module.exports = cli = ->
 
