@@ -13,7 +13,7 @@ sneaky = (taskName, description, statement) ->
 
   statement = description if toString.call(description) is '[object Function]'
   task.description = description if toString.call(description) is '[object String]'
-  statement.call task, task if toString.call(statement) is '[object Function]'
+  statement.apply task, process.argv[4..] if toString.call(statement) is '[object Function]'
 
   task.initialize()
   _tasks[taskName] = task
