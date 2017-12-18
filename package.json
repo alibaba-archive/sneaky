@@ -4,9 +4,7 @@
   "description": "Deployment Genius",
   "main": "lib/sneaky.js",
   "scripts": {
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --require coffee-script/register test/main.coffee",
-    "compile": "coffee -o lib -c src",
-    "prepublish": "rm -rf lib && coffee -o lib -c src"
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec test/main.js"
   },
   "repository": {
     "type": "git",
@@ -30,7 +28,7 @@
   "dependencies": {
     "bluebird": "^2.9.25",
     "chalk": "^1.0.0",
-    "coffee-script": "^1.9.2",
+    "coffeescript": "^2.1.0",
     "commander": "^2.8.0",
     "graceful-logger": "^0.4.3",
     "lodash": "^3.8.0",

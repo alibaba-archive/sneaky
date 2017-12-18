@@ -15,4 +15,3 @@ npm-debug.log
 node_modules
 
 tmp/*
-/lib
