@@ -6,6 +6,13 @@ Deployment suite
 [![NPM version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
 
+## How to use?
+
+1. Install sneaky via `npm install -g sneaky`
+2. Copy Skyfile.coffee (or Skyfile.js/.json) to the root of your project
+3. Edit the properties of your Skyfile (host, path, user, etc.), for more information read the example below
+4. `sneaky d`
+
 ## Feature
 
 * configuate with js/coffee script (Skyfile.js|Skyfile.coffee)
@@ -70,41 +77,44 @@ sneaky 'sneaky:test', ->
 
 ## ChangeLog
 
-###v1.1.6
+### v2.0.0
+1. Convert source code from coffee to js
+
+### v1.1.6
 1. Add deployPath to set base source directory on deploy process
 2. Create temporary directories by timestamp
 
-###v1.1.0
+### v1.1.0
 1. Add `forward` command
 
-###v1.0.0
+### v1.0.0
 1. Configuate with js/coffee script
 2. Deploy to sub directory with version and timestamp prefix
 
-###v0.5.4
+### v0.5.4
 1. fix load js config file bug
 2. expand destination option to user,host,port,destination properties
 
-###v0.5.3
+### v0.5.3
 1. auto convert string typed options to array type
 2. add option descriptions in readme
 
-###v0.5.2
+### v0.5.2
 1. support for .json and .js configuration file
 2. remove in denpendence
 
-###v0.5.0
+### v0.5.0
 1. change configuration file's format from ini to json
 2. add `includes`/`only` options to fit different situations, `includes` is an array mapping to rsync's `--include`, as the same as `excludes`, `only` is a alias of `includes` and `excludes`, `only: [lib/]` is the same as `includes: [lib/], excludes: *`. (ignore all files except lib directory)
 3. add `nochdir` flag, set this flag to true will deploy the current directory and use all the local files (not only files in git repositories)
 4. fix temp directory name's bug
 
-###v0.4.2
+### v0.4.2
 1. remove `servers`,`user`,`autoTag` configuration fields, rename `destination` to `destinations`
 2. destinations can use the ssh path `user@server:/path/to/directory` or local path `/path/to/directory`
 3. support deploy from remote git repositories, e.g. `source = https://github.com/sailxjx/sneaky`
 
-###v0.3.0
+### v0.3.0
 1. support use `.sneakyrc` file in current pwd
 
 ## TIPS
